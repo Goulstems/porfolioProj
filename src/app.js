@@ -23,7 +23,8 @@ document.body.appendChild(renderer.domElement);
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.3); // Dimmer color
 scene.add(ambientLight);
 
-scene.background = new THREE.Color(0xffb347); // warm orange
+scene.background = new THREE.Color(0x000000); // black
+
 // import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
 
 // const loader = new RGBELoader();
