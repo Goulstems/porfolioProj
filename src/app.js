@@ -18,8 +18,22 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 // --- Lighting ---
-const ambientLight = new THREE.AmbientLight(0xcccccc, 0.8);
+// const ambientLight = new THREE.AmbientLight(0xcccccc, 0.8);
+// scene.add(ambientLight);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.3); // Dimmer color
 scene.add(ambientLight);
+
+scene.background = new THREE.Color(0xffb347); // warm orange
+// import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
+
+// const loader = new RGBELoader();
+// loader.load('sunset.hdr', function(texture) {
+//     texture.mapping = THREE.EquirectangularReflectionMapping;
+//     scene.background = texture;
+//     scene.environment = texture;
+// });
+
+
 
 // --- Model Loading ---
 let peakRef = null;
