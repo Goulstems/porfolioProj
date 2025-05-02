@@ -44,7 +44,7 @@ loadFile('../prefabs/mountainScene.glb', scene, (model) => {
 });
 
 // --- Animation Loop ---
-const radius = 1;
+const radius = 2;
 let angle = 0;
 const worldPos = new THREE.Vector3();
 
