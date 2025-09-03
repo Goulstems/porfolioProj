@@ -2,16 +2,16 @@ import * as THREE from './jsModules/THREE.js';
 import { loadFile } from './jsModules/loader.js';
 
 console.log('🎮 GAME-STYLE CAMERA CONTROLS + SNOWBOARDER!');
-console.log('Right-click + drag: Free camera look | Scroll: Zoom | WASD: Control snowboarder | SPACE: Toggle auto-orbit');
+console.log('Right-click + drag: Free camera look | Scroll: Zoom | WASD: Control snowboarder');
 
 // --- Camera Control Settings ---
 const cameraSettings = {
-  radius: 0.2,  // Very close to the snowboarder
+  radius: 3.4,  // Start at cinematic distance for mountain overview
   height: 0.7,
   speed: 0.003,  // Smooth rotation speed
   autoRotate: true,  // Start with auto-rotate on
-  fov: 60,  // Wider field of view for close-up
-  minRadius: 0.05,  // Allow very close zoom
+  fov: 30,  // Wider field of view for close-up
+  minRadius: 0.05,  // Allow very close zoom to snowboarder
   maxRadius: 5.0,  // Don't need to go too far
   minFov: 10,
   maxFov: 120
@@ -493,17 +493,60 @@ function setupMouseControls() {
     let newRadius;
     
     if (e.deltaY > 0) {
-      // Zoom out
+      // Zoom out - always allow
       newRadius = Math.min(cameraSettings.maxRadius, cameraSettings.radius + zoomSpeed);
+      cameraSettings.radius = newRadius;
     } else {
-      // Zoom in
+      // Zoom in - check for safety
       newRadius = Math.max(cameraSettings.minRadius, cameraSettings.radius - zoomSpeed);
+      
+      // Test if this zoom level would cause clipping
+      const testSafe = isZoomSafe(newRadius);
+      if (testSafe) {
+        cameraSettings.radius = newRadius;
+      }
+      // If not safe, don't zoom in further
     }
-    
-    // Check if new zoom distance would cause mountain collision
-    const validRadius = getMaxSafeRadius(newRadius);
-    cameraSettings.radius = validRadius;
   });
+}
+
+function isZoomSafe(testRadius) {
+  if (!mountainMesh) return true;
+  
+  // Get current target
+  let currentTarget = orbitTarget;
+  let isFollowingSnowboarder = false;
+  if (followSnowboarder && snowboarder) {
+    currentTarget = snowboarderSettings.position.clone();
+    currentTarget.y += 0.04;
+    isFollowingSnowboarder = true;
+  }
+  
+  // Calculate where camera would be at this radius
+  const testX = currentTarget.x + testRadius * Math.sin(mouseState.theta) * Math.cos(mouseState.phi);
+  const testY = currentTarget.y + testRadius * Math.cos(mouseState.theta);
+  const testZ = currentTarget.z + testRadius * Math.sin(mouseState.theta) * Math.sin(mouseState.phi);
+  
+  const testPos = new THREE.Vector3(testX, testY, testZ);
+  const direction = new THREE.Vector3().subVectors(testPos, currentTarget).normalize();
+  
+  // When following snowboarder, be much more permissive with close zoom
+  if (isFollowingSnowboarder) {
+    // Allow very close zoom to snowboarder - only check for actual mountain collision
+    const raycaster = new THREE.Raycaster(currentTarget, direction, 0, testRadius + 0.1);
+    const intersects = raycaster.intersectObject(mountainMesh, true);
+    
+    // Allow minimum distance of 0.02 when following snowboarder (very close!)
+    return intersects.length === 0 && testRadius >= 0.02;
+  } else {
+    // When orbiting mountain peak, allow closer zoom for cinematic shots
+    const ZOOM_SAFETY_BUFFER = 0.3; // Reduced buffer for closer zoom
+    const raycaster = new THREE.Raycaster(currentTarget, direction, 0, testRadius + ZOOM_SAFETY_BUFFER);
+    const intersects = raycaster.intersectObject(mountainMesh, true);
+    
+    const MIN_SAFE_ZOOM = 0.2; // Much closer minimum zoom for cinematic mode
+    return intersects.length === 0 && testRadius >= MIN_SAFE_ZOOM;
+  }
 }
 
 // --- Comprehensive Input Detection ---
@@ -535,7 +578,7 @@ function registerInput() {
 
 // --- Keyboard Controls ---
 const keys = {};
-let followSnowboarder = true; // Start in follow mode to see snowboarder
+let followSnowboarder = false; // Keep gameplay cam in background, use cinematic orbit
 
 document.addEventListener('keydown', (e) => { 
   keys[e.code] = true; 
@@ -555,23 +598,6 @@ document.addEventListener('keyup', (e) => {
 });
 
 function handleKeyboardControls() {
-  if (keys['Space']) {
-    cameraSettings.autoRotate = !cameraSettings.autoRotate;
-    console.log('Auto-rotate:', cameraSettings.autoRotate ? 'ON' : 'OFF');
-    keys['Space'] = false;
-    // Space does NOT reset cinematic timer - only WASD does
-  }
-  
-  if (keys['KeyF']) { // F to follow snowboarder
-    followSnowboarder = !followSnowboarder;
-    if (followSnowboarder) {
-      cameraSettings.autoRotate = false; // Disable auto-rotate when following
-    }
-    console.log('Follow snowboarder:', followSnowboarder ? 'ON' : 'OFF');
-    keys['KeyF'] = false;
-    // F does NOT reset cinematic timer - only WASD does
-  }
-  
   if (keys['KeyR']) { // Reset camera
     mouseState.phi = 0;
     mouseState.theta = Math.PI / 4;
@@ -749,11 +775,68 @@ function updateCameraPosition() {
   let y = currentTarget.y + cameraSettings.radius * Math.cos(currentTheta);
   let z = currentTarget.z + cameraSettings.radius * Math.sin(currentTheta) * Math.sin(currentPhi);
   
-  // Check for mountain collision and adjust camera position
-  const adjustedPosition = checkCameraCollision(currentTarget, new THREE.Vector3(x, y, z));
+  // Robust collision detection to prevent ANY clipping
+  const safePosition = preventMountainClipping(currentTarget, new THREE.Vector3(x, y, z));
   
-  camera.position.set(adjustedPosition.x, adjustedPosition.y, adjustedPosition.z);
+  camera.position.set(safePosition.x, safePosition.y, safePosition.z);
   camera.lookAt(currentTarget);
+}
+
+// --- Ultra-Robust Anti-Clipping System ---
+function preventMountainClipping(target, desiredPos) {
+  if (!mountainMesh) {
+    console.warn('⚠️ No mountainMesh found for collision detection');
+    return desiredPos;
+  }
+  
+  const direction = new THREE.Vector3().subVectors(desiredPos, target).normalize();
+  const distance = target.distanceTo(desiredPos);
+  
+  // Check if we're following the snowboarder
+  const isFollowingSnowboarder = followSnowboarder && snowboarder;
+  
+  // Use different safety margins depending on what we're orbiting
+  const SAFETY_BUFFER = isFollowingSnowboarder ? 0.1 : 1.0; // Much smaller buffer when following snowboarder
+  
+  // Multi-point collision detection for thorough coverage
+  const checkPoints = [
+    desiredPos.clone(),                                           // Camera position
+    desiredPos.clone().add(direction.clone().multiplyScalar(0.1)), // Slightly forward
+    desiredPos.clone().add(direction.clone().multiplyScalar(-0.1)), // Slightly back
+  ];
+  
+  // Check each point for intersection
+  for (const point of checkPoints) {
+    const pointRay = new THREE.Raycaster(target, 
+      new THREE.Vector3().subVectors(point, target).normalize(), 
+      0, target.distanceTo(point) + 0.2);
+    const hits = pointRay.intersectObject(mountainMesh, true);
+    
+    if (hits.length > 0) {
+      // Found intersection - compute safe position
+      const hitDistance = target.distanceTo(hits[0].point);
+      const safeDistance = Math.max(SAFETY_BUFFER, hitDistance * (isFollowingSnowboarder ? 0.9 : 0.7));
+      
+      console.log('🚫 Clipping prevented! Moving camera to safe distance:', safeDistance);
+      
+      return new THREE.Vector3()
+        .copy(direction)
+        .multiplyScalar(safeDistance)
+        .add(target);
+    }
+  }
+  
+  // When following snowboarder, be much more permissive about minimum distance
+  const minDistance = isFollowingSnowboarder ? 0.02 : 0.8;
+  if (distance < minDistance) {
+    console.log('🚫 Enforcing minimum distance:', minDistance);
+    return new THREE.Vector3()
+      .copy(direction)
+      .multiplyScalar(minDistance)
+      .add(target);
+  }
+  
+  return desiredPos;
 }
 
 // --- Camera Collision Detection ---
@@ -769,21 +852,25 @@ function checkCameraCollision(target, desiredCameraPos) {
   const intersects = raycaster.intersectObject(mountainMesh, true);
   
   if (intersects.length > 0) {
-    // Found collision - place camera just before the intersection point
+    // Found collision - place camera before the intersection point
     const intersectionPoint = intersects[0].point;
-    const safeDistance = 0.1; // Minimum distance from mountain surface
+    const safeDistance = 0.3; // Reasonable minimum distance from mountain surface
+    const distanceToIntersection = target.distanceTo(intersectionPoint);
     
-    // Move camera back from intersection point along the ray direction
-    const safePosition = new THREE.Vector3()
-      .subVectors(intersectionPoint, target)
-      .normalize()
-      .multiplyScalar(target.distanceTo(intersectionPoint) - safeDistance)
-      .add(target);
-    
-    return safePosition;
+    // Only adjust if we're actually too close
+    if (distanceToIntersection < safeDistance) {
+      // Move camera back to safe distance
+      const safePosition = new THREE.Vector3()
+        .subVectors(intersectionPoint, target)
+        .normalize()
+        .multiplyScalar(Math.max(cameraSettings.minRadius, distanceToIntersection - safeDistance))
+        .add(target);
+      
+      return safePosition;
+    }
   }
   
-  // No collision, use desired position
+  // No collision or collision is far enough, use desired position
   return desiredCameraPos;
 }
 
@@ -810,8 +897,8 @@ function getMaxSafeRadius(requestedRadius) {
   const intersects = raycaster.intersectObject(mountainMesh, true);
   
   if (intersects.length > 0) {
-    // Return safe distance with small buffer
-    const maxSafeDistance = currentTarget.distanceTo(intersects[0].point) - 0.1;
+    // Return safe distance with reasonable buffer
+    const maxSafeDistance = currentTarget.distanceTo(intersects[0].point) - 0.2;
     return Math.max(cameraSettings.minRadius, maxSafeDistance);
   }
   
@@ -850,8 +937,6 @@ setTimeout(() => {
   console.log('🎥 CAMERA:');
   console.log('• Right-click + drag = Free camera look');
   console.log('• Scroll wheel = Zoom in/out');
-  console.log('• SPACE = Toggle auto-orbit');
-  console.log('• F = Follow snowboarder');
   console.log('• R = Reset camera');
   console.log('');
   console.log('🏂 SNOWBOARDER:');
