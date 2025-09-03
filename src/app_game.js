@@ -29,7 +29,7 @@ const mouseState = {
 
 // Auto-rotate and idle detection
 const idleDetection = {
-  lastInputTime: Date.now(),
+  lastInputTime: Date.now() - 6000, // Start 6 seconds ago to immediately trigger cinematic mode
   idleTimeout: 5000, // 5 seconds
   isIdle: false,
   transitionSpeed: 0.02, // How fast to blend between manual and auto
@@ -333,19 +333,20 @@ function setupMouseControls() {
   
   // Mouse down
   canvas.addEventListener('mousedown', (e) => {
+    // Clicking does NOT reset cinematic timer
+    
     if (e.button === 2) { // Right mouse button
       mouseState.isRightDown = true;
       mouseState.lastX = e.clientX;
       mouseState.lastY = e.clientY;
       canvas.style.cursor = 'grabbing';
-      
-      // Disable auto-rotate when manually controlling
-      registerInput(); // Detect input for idle system
     }
   });
   
   // Mouse up
   canvas.addEventListener('mouseup', (e) => {
+    // Releasing does NOT reset cinematic timer
+    
     if (e.button === 2) {
       mouseState.isRightDown = false;
       canvas.style.cursor = 'default';
@@ -354,7 +355,10 @@ function setupMouseControls() {
   
   // Mouse move
   canvas.addEventListener('mousemove', (e) => {
+    // Only register input if right-click dragging (not regular mouse movement)
     if (mouseState.isRightDown) {
+      registerInput(); // Right-click dragging resets cinematic timer
+      
       const deltaX = e.clientX - mouseState.lastX;
       const deltaY = e.clientY - mouseState.lastY;
       
@@ -370,7 +374,7 @@ function setupMouseControls() {
   // Mouse wheel for zoom
   canvas.addEventListener('wheel', (e) => {
     e.preventDefault();
-    registerInput(); // Detect input for idle system
+    // registerInput() is now handled globally
     
     const zoomSpeed = 0.1;
     if (e.deltaY > 0) {
@@ -381,6 +385,21 @@ function setupMouseControls() {
       cameraSettings.radius = Math.max(cameraSettings.minRadius, cameraSettings.radius - zoomSpeed);
     }
   });
+}
+
+// --- Comprehensive Input Detection ---
+function setupGlobalInputDetection() {
+  // NO general keyboard detection - only WASD will be detected in keyboard handlers
+  
+  // Detect scroll anywhere
+  document.addEventListener('wheel', registerInput);
+  
+  // Detect touch events (for mobile/tablets)
+  document.addEventListener('touchstart', registerInput);
+  document.addEventListener('touchmove', registerInput);
+  document.addEventListener('touchend', registerInput);
+  
+  console.log('🎮 WASD-only input detection - only WASD movement, scroll, touch, and right-click drag reset timer');
 }
 
 // --- Input Detection for Idle System ---
@@ -401,10 +420,19 @@ let followSnowboarder = true; // Start in follow mode to see snowboarder
 
 document.addEventListener('keydown', (e) => { 
   keys[e.code] = true; 
-  registerInput(); // Detect input for idle system
+  
+  // Only WASD keys reset the cinematic timer
+  if (e.code === 'KeyW' || e.code === 'KeyA' || e.code === 'KeyS' || e.code === 'KeyD') {
+    registerInput();
+  }
 });
 document.addEventListener('keyup', (e) => { 
   keys[e.code] = false; 
+  
+  // Only WASD keys reset the cinematic timer
+  if (e.code === 'KeyW' || e.code === 'KeyA' || e.code === 'KeyS' || e.code === 'KeyD') {
+    registerInput();
+  }
 });
 
 function handleKeyboardControls() {
@@ -412,7 +440,7 @@ function handleKeyboardControls() {
     cameraSettings.autoRotate = !cameraSettings.autoRotate;
     console.log('Auto-rotate:', cameraSettings.autoRotate ? 'ON' : 'OFF');
     keys['Space'] = false;
-    registerInput();
+    // Space does NOT reset cinematic timer - only WASD does
   }
   
   if (keys['KeyF']) { // F to follow snowboarder
@@ -422,6 +450,7 @@ function handleKeyboardControls() {
     }
     console.log('Follow snowboarder:', followSnowboarder ? 'ON' : 'OFF');
     keys['KeyF'] = false;
+    // F does NOT reset cinematic timer - only WASD does
   }
   
   if (keys['KeyR']) { // Reset camera
@@ -432,6 +461,7 @@ function handleKeyboardControls() {
     followSnowboarder = false;
     console.log('Camera reset');
     keys['KeyR'] = false;
+    // R does NOT reset cinematic timer - only WASD does
   }
 }
 
@@ -613,6 +643,7 @@ function animate() {
 
 // --- Initialize ---
 setupMouseControls();
+setupGlobalInputDetection(); // Enable comprehensive input detection
 animate();
 
 // --- Responsive Resize ---
