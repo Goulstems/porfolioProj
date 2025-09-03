@@ -39,7 +39,7 @@ scene.background = new THREE.Color(0x000000); // black
 // --- Model Loading ---
 let peakRef = null;
 
-loadFile('../prefabs/mountainScene.glb', scene, (model) => {
+loadFile('/prefabs/mountainScene.glb', scene, (model) => {
   scene.add(model);
 
   model.traverse((child) => {
