@@ -46,8 +46,112 @@ const camera = new THREE.PerspectiveCamera(
   1000
 );
 
-const renderer = new THREE.WebGLRenderer();
-renderer.setClearColor(0xffffff, 1);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setClearColor(0x87CEEB, 1); // Sky blue background to contrast with white snow
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// --- Snow Particle System ---
+const snowSettings = {
+  count: 20000,        // Keep your high particle count
+  area: 15,            // Back to original concentrated area
+  speed: 0.05,         // Fast fall speed
+  windStrength: 0.02,  // Strong wind
+  size: 0.025,         // Good visible size
+  windDirection: 0.6   // Diagonal wind for realism
+};
+
+let snowParticles = [];
+let snowGroup;
+
+function createSnowSystem() {
+  snowGroup = new THREE.Group();
+  snowParticles = [];
+  
+  // Create individual snowflake meshes (guaranteed to work)
+  const snowflakeGeometry = new THREE.SphereGeometry(snowSettings.size, 6, 6);
+  const snowflakeMaterial = new THREE.MeshBasicMaterial({ 
+    color: 0xffffff,
+    transparent: false
+  });
+  
+  for (let i = 0; i < snowSettings.count; i++) {
+    const snowflake = new THREE.Mesh(snowflakeGeometry, snowflakeMaterial);
+    
+    // Center snow around the mountain peak (orbitTarget) instead of origin
+    const centerX = orbitTarget ? orbitTarget.x : 0;
+    const centerZ = orbitTarget ? orbitTarget.z : 0;
+    
+    // Random position centered around mountain
+    snowflake.position.x = centerX + (Math.random() - 0.5) * snowSettings.area;
+    snowflake.position.y = Math.random() * 20 + 10; // Start higher for better coverage
+    snowflake.position.z = centerZ + (Math.random() - 0.5) * snowSettings.area;
+    
+    // Store velocity on the mesh
+    snowflake.velocity = new THREE.Vector3(
+      snowSettings.windDirection * snowSettings.windStrength,
+      -snowSettings.speed,
+      snowSettings.windDirection * snowSettings.windStrength * 0.3
+    );
+    
+    snowParticles.push(snowflake);
+    snowGroup.add(snowflake);
+  }
+  
+  scene.add(snowGroup);
+  
+  // Add one bright test snowflake to ensure visibility
+  const testSnowflake = new THREE.Mesh(
+    new THREE.SphereGeometry(0.1, 8, 8), // Larger test snowflake
+    new THREE.MeshBasicMaterial({ color: 0xffff00 }) // Bright yellow
+  );
+  testSnowflake.position.set(centerX, 5, centerZ); // Position over mountain center
+  scene.add(testSnowflake);
+  
+  console.log('❄️ MESH-based snow system created with', snowSettings.count, 'snowflake meshes');
+  console.log('🟡 Yellow test snowflake added at mountain center');
+  console.log('❄️ First snowflake position:', snowParticles[0].position);
+  console.log('❄️ Snowflake size:', snowSettings.size);
+  console.log('❄️ Total objects in scene:', scene.children.length);
+  console.log('🏔️ Snow centered around:', centerX, centerZ);
+}
+
+function updateSnowSystem() {
+  if (!snowParticles || snowParticles.length === 0) return;
+  
+  // Get current mountain center for respawning
+  const centerX = orbitTarget ? orbitTarget.x : 0;
+  const centerZ = orbitTarget ? orbitTarget.z : 0;
+  
+  for (let i = 0; i < snowParticles.length; i++) {
+    const snowflake = snowParticles[i];
+    
+    // Update position based on velocity
+    snowflake.position.add(snowflake.velocity);
+    
+    // Add some wind variation
+    snowflake.velocity.x += (Math.random() - 0.5) * 0.001;
+    
+    // Reset snowflake if it falls too low or drifts too far from mountain center
+    if (snowflake.position.y < -5 || 
+        Math.abs(snowflake.position.x - centerX) > snowSettings.area || 
+        Math.abs(snowflake.position.z - centerZ) > snowSettings.area) {
+      
+      // Reset to top, centered around mountain
+      snowflake.position.x = centerX + (Math.random() - 0.5) * snowSettings.area;
+      snowflake.position.y = Math.random() * 10 + 20; // Spawn higher
+      snowflake.position.z = centerZ + (Math.random() - 0.5) * snowSettings.area;
+      
+      // Reset velocity
+      snowflake.velocity.set(
+        snowSettings.windDirection * snowSettings.windStrength,
+        -snowSettings.speed,
+        snowSettings.windDirection * snowSettings.windStrength * 0.3
+      );
+    }
+  }
+}
+
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
@@ -110,9 +214,18 @@ function updateCinematicBars() {
 createCinematicBars();
 
 // --- Lighting ---
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); // Brighter ambient for snowy day
 scene.add(ambientLight);
-scene.background = new THREE.Color(0x000000);
+
+// Add directional light for realistic snow illumination
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+directionalLight.position.set(10, 20, 5);
+directionalLight.castShadow = true;
+scene.add(directionalLight);
+
+// Snowy sky background
+scene.background = new THREE.Color(0xf0f8ff); // Alice blue for snowy atmosphere
+scene.fog = new THREE.Fog(0xf0f8ff, 20, 100); // Add fog for atmospheric depth
 
 // --- Snowboarder Character ---
 let snowboarder = null;
@@ -377,13 +490,19 @@ function setupMouseControls() {
     // registerInput() is now handled globally
     
     const zoomSpeed = 0.1;
+    let newRadius;
+    
     if (e.deltaY > 0) {
       // Zoom out
-      cameraSettings.radius = Math.min(cameraSettings.maxRadius, cameraSettings.radius + zoomSpeed);
+      newRadius = Math.min(cameraSettings.maxRadius, cameraSettings.radius + zoomSpeed);
     } else {
       // Zoom in
-      cameraSettings.radius = Math.max(cameraSettings.minRadius, cameraSettings.radius - zoomSpeed);
+      newRadius = Math.max(cameraSettings.minRadius, cameraSettings.radius - zoomSpeed);
     }
+    
+    // Check if new zoom distance would cause mountain collision
+    const validRadius = getMaxSafeRadius(newRadius);
+    cameraSettings.radius = validRadius;
   });
 }
 
@@ -540,6 +659,10 @@ loadFile('/prefabs/mountainScene.glb', scene, (model) => {
   console.log('🏂 Snowboarder position:', snowboarderSettings.position);
   console.log('🌍 Terrain height at spawn:', terrainHeight);
   
+  // Now create snow system centered on the mountain
+  createSnowSystem();
+  console.log('❄️ Snow system created and centered on mountain peak');
+  
   // Initialize camera position to match first orbit position - prevents initial tween
   initializeCameraPosition();
 });
@@ -622,12 +745,78 @@ function updateCameraPosition() {
   }
   
   // Convert spherical coordinates to cartesian
-  const x = currentTarget.x + cameraSettings.radius * Math.sin(currentTheta) * Math.cos(currentPhi);
-  const y = currentTarget.y + cameraSettings.radius * Math.cos(currentTheta);
-  const z = currentTarget.z + cameraSettings.radius * Math.sin(currentTheta) * Math.sin(currentPhi);
+  let x = currentTarget.x + cameraSettings.radius * Math.sin(currentTheta) * Math.cos(currentPhi);
+  let y = currentTarget.y + cameraSettings.radius * Math.cos(currentTheta);
+  let z = currentTarget.z + cameraSettings.radius * Math.sin(currentTheta) * Math.sin(currentPhi);
   
-  camera.position.set(x, y, z);
+  // Check for mountain collision and adjust camera position
+  const adjustedPosition = checkCameraCollision(currentTarget, new THREE.Vector3(x, y, z));
+  
+  camera.position.set(adjustedPosition.x, adjustedPosition.y, adjustedPosition.z);
   camera.lookAt(currentTarget);
+}
+
+// --- Camera Collision Detection ---
+function checkCameraCollision(target, desiredCameraPos) {
+  if (!mountainMesh) return desiredCameraPos;
+  
+  // Create a ray from target to desired camera position
+  const direction = new THREE.Vector3().subVectors(desiredCameraPos, target).normalize();
+  const distance = target.distanceTo(desiredCameraPos);
+  
+  // Cast ray to check for mountain intersection
+  const raycaster = new THREE.Raycaster(target, direction, 0, distance);
+  const intersects = raycaster.intersectObject(mountainMesh, true);
+  
+  if (intersects.length > 0) {
+    // Found collision - place camera just before the intersection point
+    const intersectionPoint = intersects[0].point;
+    const safeDistance = 0.1; // Minimum distance from mountain surface
+    
+    // Move camera back from intersection point along the ray direction
+    const safePosition = new THREE.Vector3()
+      .subVectors(intersectionPoint, target)
+      .normalize()
+      .multiplyScalar(target.distanceTo(intersectionPoint) - safeDistance)
+      .add(target);
+    
+    return safePosition;
+  }
+  
+  // No collision, use desired position
+  return desiredCameraPos;
+}
+
+function getMaxSafeRadius(requestedRadius) {
+  if (!mountainMesh) return requestedRadius;
+  
+  // Get current target and camera angles
+  let currentTarget = orbitTarget;
+  if (followSnowboarder && snowboarder) {
+    currentTarget = snowboarderSettings.position.clone();
+    currentTarget.y += 0.04;
+  }
+  
+  // Calculate camera position with requested radius
+  const testX = currentTarget.x + requestedRadius * Math.sin(mouseState.theta) * Math.cos(mouseState.phi);
+  const testY = currentTarget.y + requestedRadius * Math.cos(mouseState.theta);
+  const testZ = currentTarget.z + requestedRadius * Math.sin(mouseState.theta) * Math.sin(mouseState.phi);
+  
+  const testPosition = new THREE.Vector3(testX, testY, testZ);
+  const direction = new THREE.Vector3().subVectors(testPosition, currentTarget).normalize();
+  
+  // Cast ray to find maximum safe distance
+  const raycaster = new THREE.Raycaster(currentTarget, direction, 0, requestedRadius);
+  const intersects = raycaster.intersectObject(mountainMesh, true);
+  
+  if (intersects.length > 0) {
+    // Return safe distance with small buffer
+    const maxSafeDistance = currentTarget.distanceTo(intersects[0].point) - 0.1;
+    return Math.max(cameraSettings.minRadius, maxSafeDistance);
+  }
+  
+  // No collision, use requested radius
+  return requestedRadius;
 }
 
 function animate() {
@@ -636,12 +825,14 @@ function animate() {
   handleKeyboardControls();
   updateSnowboarder(); // Update snowboarder physics and movement
   updateCameraPosition();
+  updateSnowSystem(); // Update falling snow particles
   updateCinematicBars(); // Update cinematic bars animation
   
   renderer.render(scene, camera);
 }
 
 // --- Initialize ---
+console.log('🟢 Initializing systems...');
 setupMouseControls();
 setupGlobalInputDetection(); // Enable comprehensive input detection
 animate();
