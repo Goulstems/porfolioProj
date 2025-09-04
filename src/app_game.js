@@ -47,7 +47,7 @@ const camera = new THREE.PerspectiveCamera(
 );
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setClearColor(0x87CEEB, 1); // Sky blue background to contrast with white snow
+renderer.setClearColor(0x1E90FF, 1); // Bright vivid dodger blue sky
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
@@ -317,18 +317,36 @@ function updateCinematicBars() {
 createCinematicBars();
 
 // --- Lighting ---
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); // Brighter ambient for snowy day
+// Create a bright sunny day atmosphere
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.3); // Reduced ambient
 scene.add(ambientLight);
 
-// Add directional light for realistic snow illumination
-const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-directionalLight.position.set(10, 20, 5);
-directionalLight.castShadow = true;
-scene.add(directionalLight);
+// Sun directional light - bright and warm but toned down
+const sunLight = new THREE.DirectionalLight(0xfff8dc, 0.8); // Reduced from 1.2 to 0.8
+sunLight.position.set(50, 80, 30); // High in the sky, angled
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.width = 2048;
+sunLight.shadow.mapSize.height = 2048;
+scene.add(sunLight);
 
-// Snowy sky background
-scene.background = new THREE.Color(0xf0f8ff); // Alice blue for snowy atmosphere
-scene.fog = new THREE.Fog(0xf0f8ff, 20, 100); // Add fog for atmospheric depth
+// Create visible sun sphere
+const sunGeometry = new THREE.SphereGeometry(3, 32, 32);
+const sunMaterial = new THREE.MeshBasicMaterial({ 
+  color: 0xffff99,
+  emissive: 0xffff99,
+  emissiveIntensity: 0.2 // Reduced emissive intensity
+});
+const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+sun.position.copy(sunLight.position).multiplyScalar(0.8); // Position near the light
+scene.add(sun);
+
+// Add secondary fill light for softer shadows
+const fillLight = new THREE.DirectionalLight(0x87ceeb, 0.2); // Reduced from 0.3 to 0.2
+fillLight.position.set(-30, 40, -20);
+scene.add(fillLight);
+
+// Clear atmospheric background - remove fog for crisp bluebird day
+scene.background = null; // Use renderer clear color instead
 
 let mountainMesh = null;
 
