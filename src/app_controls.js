@@ -1,7 +1,6 @@
 import * as THREE from './jsModules/THREE.js';
 import { loadFile } from './jsModules/loader.js';
 
-console.log('🚀 CAMERA CONTROLS VERSION - Press H for help!');
 
 // --- Camera Control Settings ---
 const cameraSettings = {
@@ -147,14 +146,12 @@ let orbitTarget = new THREE.Vector3(0, 3, 0); // Default position
 
 loadFile('/prefabs/mountainScene.glb', scene, (model) => {
   scene.add(model);
-  console.log('✅ Model loaded! Looking for peak...');
   
   // Find highest point
   let highestPoint = new THREE.Vector3(0, -Infinity, 0);
   
   model.traverse((mesh) => {
     if (mesh.isMesh && mesh.geometry && mesh.geometry.attributes.position) {
-      console.log(`Scanning mesh: ${mesh.name || 'unnamed'}`);
       const positions = mesh.geometry.attributes.position;
       
       for (let i = 0; i < positions.count; i++) {
@@ -175,12 +172,10 @@ loadFile('/prefabs/mountainScene.glb', scene, (model) => {
   
   if (highestPoint.y > -Infinity) {
     orbitTarget = highestPoint;
-    console.log('🎯 Found peak at:', orbitTarget);
   } else {
     // Fallback: use model bounding box
     const box = new THREE.Box3().setFromObject(model);
     orbitTarget.set(0, box.max.y, 0);
-    console.log('📦 Using model top:', orbitTarget);
   }
 });
 

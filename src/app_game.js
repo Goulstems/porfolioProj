@@ -1,8 +1,8 @@
 import * as THREE from './jsModules/THREE.js';
 import { loadFile } from './jsModules/loader.js';
 
-console.log('🎮 GAME-STYLE CAMERA CONTROLS + SNOWBOARDER!');
-console.log('Right-click + drag: Free camera look | Scroll: Zoom | WASD: Control snowboarder');
+// Snowboarding game
+// Snowboarding game with Three.js
 
 // --- Camera Control Settings ---
 const cameraSettings = {
@@ -68,30 +68,45 @@ function createSnowSystem() {
   snowGroup = new THREE.Group();
   snowParticles = [];
   
-  // Create individual snowflake meshes (guaranteed to work)
-  const snowflakeGeometry = new THREE.SphereGeometry(snowSettings.size, 6, 6);
+  // Get mountain center for snow positioning
+  const centerX = orbitTarget ? orbitTarget.x : 0;
+  const centerZ = orbitTarget ? orbitTarget.z : 0;
+  
+  // Create geometries for different snowflake sizes
+  const fullSizeGeometry = new THREE.SphereGeometry(snowSettings.size, 6, 6);
+  const halfSizeGeometry = new THREE.SphereGeometry(snowSettings.size * 0.5, 4, 4);
+  const quarterSizeGeometry = new THREE.SphereGeometry(snowSettings.size * 0.25, 3, 3);
+  
   const snowflakeMaterial = new THREE.MeshBasicMaterial({ 
     color: 0xffffff,
     transparent: false
   });
   
   for (let i = 0; i < snowSettings.count; i++) {
-    const snowflake = new THREE.Mesh(snowflakeGeometry, snowflakeMaterial);
+    // Randomly choose size (50% full, 30% half, 20% quarter)
+    let geometry;
+    const sizeRandom = Math.random();
+    if (sizeRandom < 0.5) {
+      geometry = fullSizeGeometry; // 50% full size
+    } else if (sizeRandom < 0.8) {
+      geometry = halfSizeGeometry; // 30% half size
+    } else {
+      geometry = quarterSizeGeometry; // 20% quarter size
+    }
     
-    // Center snow around the mountain peak (orbitTarget) instead of origin
-    const centerX = orbitTarget ? orbitTarget.x : 0;
-    const centerZ = orbitTarget ? orbitTarget.z : 0;
+    const snowflake = new THREE.Mesh(geometry, snowflakeMaterial);
     
     // Random position centered around mountain
     snowflake.position.x = centerX + (Math.random() - 0.5) * snowSettings.area;
     snowflake.position.y = Math.random() * 20 + 10; // Start higher for better coverage
     snowflake.position.z = centerZ + (Math.random() - 0.5) * snowSettings.area;
     
-    // Store velocity on the mesh
+    // Store velocity on the mesh - smaller flakes fall slightly slower
+    const sizeMultiplier = geometry === quarterSizeGeometry ? 0.7 : (geometry === halfSizeGeometry ? 0.85 : 1.0);
     snowflake.velocity = new THREE.Vector3(
-      snowSettings.windDirection * snowSettings.windStrength,
-      -snowSettings.speed,
-      snowSettings.windDirection * snowSettings.windStrength * 0.3
+      snowSettings.windDirection * snowSettings.windStrength * sizeMultiplier,
+      -snowSettings.speed * sizeMultiplier,
+      snowSettings.windDirection * snowSettings.windStrength * 0.3 * sizeMultiplier
     );
     
     snowParticles.push(snowflake);
@@ -107,13 +122,6 @@ function createSnowSystem() {
   );
   testSnowflake.position.set(centerX, 5, centerZ); // Position over mountain center
   scene.add(testSnowflake);
-  
-  console.log('❄️ MESH-based snow system created with', snowSettings.count, 'snowflake meshes');
-  console.log('🟡 Yellow test snowflake added at mountain center');
-  console.log('❄️ First snowflake position:', snowParticles[0].position);
-  console.log('❄️ Snowflake size:', snowSettings.size);
-  console.log('❄️ Total objects in scene:', scene.children.length);
-  console.log('🏔️ Snow centered around:', centerX, centerZ);
 }
 
 function updateSnowSystem() {
@@ -508,6 +516,104 @@ function setupMouseControls() {
       // If not safe, don't zoom in further
     }
   });
+
+  // --- Touch Controls for Mobile ---
+  let touchState = {
+    isTracking: false,
+    lastX: 0,
+    lastY: 0,
+    touchStartTime: 0
+  };
+
+  // Touch start
+  canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault(); // Prevent scrolling
+    
+    if (e.touches.length === 1) { // Single finger touch
+      const touch = e.touches[0];
+      touchState.isTracking = true;
+      touchState.lastX = touch.clientX;
+      touchState.lastY = touch.clientY;
+      touchState.touchStartTime = Date.now();
+      canvas.style.cursor = 'grabbing';
+    }
+  });
+
+  // Touch end
+  canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    touchState.isTracking = false;
+    canvas.style.cursor = 'default';
+  });
+
+  // Touch move - orbit camera
+  canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault(); // Prevent scrolling
+    
+    if (touchState.isTracking && e.touches.length === 1) {
+      const touch = e.touches[0];
+      registerInput(); // Touch dragging resets cinematic timer
+      
+      const deltaX = touch.clientX - touchState.lastX;
+      const deltaY = touch.clientY - touchState.lastY;
+      
+      // Update camera angles (same as mouse)
+      mouseState.phi -= deltaX * mouseState.sensitivity;
+      mouseState.theta = Math.max(0.1, Math.min(Math.PI - 0.1, mouseState.theta + deltaY * mouseState.sensitivity));
+      
+      touchState.lastX = touch.clientX;
+      touchState.lastY = touch.clientY;
+    }
+  });
+
+  // Touch pinch for zoom
+  let pinchDistance = 0;
+  
+  canvas.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+      // Two finger pinch start
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      pinchDistance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+    }
+  });
+
+  canvas.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const currentDistance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+      
+      if (pinchDistance > 0) {
+        const deltaDistance = currentDistance - pinchDistance;
+        const zoomSpeed = 0.01; // Smaller for touch sensitivity
+        let newRadius;
+        
+        if (deltaDistance < 0) {
+          // Pinch in - zoom in
+          newRadius = Math.max(cameraSettings.minRadius, cameraSettings.radius + deltaDistance * zoomSpeed);
+          const testSafe = isZoomSafe(newRadius);
+          if (testSafe) {
+            cameraSettings.radius = newRadius;
+          }
+        } else {
+          // Pinch out - zoom out
+          newRadius = Math.min(cameraSettings.maxRadius, cameraSettings.radius + deltaDistance * zoomSpeed);
+          cameraSettings.radius = newRadius;
+        }
+      }
+      
+      pinchDistance = currentDistance;
+    }
+  });
 }
 
 function isZoomSafe(testRadius) {
@@ -560,8 +666,6 @@ function setupGlobalInputDetection() {
   document.addEventListener('touchstart', registerInput);
   document.addEventListener('touchmove', registerInput);
   document.addEventListener('touchend', registerInput);
-  
-  console.log('🎮 WASD-only input detection - only WASD movement, scroll, touch, and right-click drag reset timer');
 }
 
 // --- Input Detection for Idle System ---
@@ -572,7 +676,6 @@ function registerInput() {
     mouseState.phi = autoRotateAngle;
     mouseState.theta = Math.PI / 3; // Use the current auto-rotate viewing angle
     cameraSettings.autoRotate = false;
-    console.log('🎮 Manual control activated - continuing from auto-rotate position');
   }
 }
 
@@ -604,7 +707,6 @@ function handleKeyboardControls() {
     cameraSettings.radius = 3.4;
     cameraSettings.autoRotate = true;
     followSnowboarder = false;
-    console.log('Camera reset');
     keys['KeyR'] = false;
     // R does NOT reset cinematic timer - only WASD does
   }
@@ -615,13 +717,11 @@ let orbitTarget = new THREE.Vector3(0, 3, 0);
 
 loadFile('/prefabs/mountainScene.glb', scene, (model) => {
   scene.add(model);
-  console.log('✅ Model loaded! Finding peak and setting up snowboarder...');
   
   // Find the mountain mesh for terrain collision
   model.traverse((child) => {
     if (child.isMesh && (child.name.toLowerCase().includes('mountain') || child.name.toLowerCase().includes('terrain'))) {
       mountainMesh = child;
-      console.log('🏔️ Found mountain mesh:', child.name);
     }
   });
   
@@ -630,64 +730,34 @@ loadFile('/prefabs/mountainScene.glb', scene, (model) => {
     model.traverse((child) => {
       if (child.isMesh && !mountainMesh) {
         mountainMesh = child;
-        console.log('🏔️ Using mesh for terrain:', child.name);
       }
     });
   }
   
-  // Find highest point for camera target
-  let highestPoint = new THREE.Vector3(0, -Infinity, 0);
+  // Use static coordinates instead of dynamic peak finding for better performance
+  const MOUNTAIN_PEAK = { x: -0.06617075204849243, y: 0.6651918888092041, z: -0.1258300095796585 };
+  const SNOWBOARDER_SPAWN = { x: -0.06617075204849243, y: 0.6701918888092183, z: -0.1258300095796585 };
   
-  model.traverse((mesh) => {
-    if (mesh.isMesh && mesh.geometry && mesh.geometry.attributes.position) {
-      const positions = mesh.geometry.attributes.position;
-      
-      for (let i = 0; i < positions.count; i++) {
-        const vertex = new THREE.Vector3(
-          positions.getX(i),
-          positions.getY(i),
-          positions.getZ(i)
-        );
-        
-        const worldVertex = mesh.localToWorld(vertex.clone());
-        
-        if (worldVertex.y > highestPoint.y) {
-          highestPoint.copy(worldVertex);
-        }
-      }
-    }
-  });
-  
-  if (highestPoint.y > -Infinity) {
-    orbitTarget = highestPoint;
-    console.log('🎯 Camera orbiting around peak at:', orbitTarget);
-  } else {
-    const box = new THREE.Box3().setFromObject(model);
-    orbitTarget.set(0, box.max.y, 0);
-    console.log('📦 Camera orbiting around model top:', orbitTarget);
-  }
+  // Set orbit target to the known peak coordinates
+  orbitTarget.set(MOUNTAIN_PEAK.x, MOUNTAIN_PEAK.y, MOUNTAIN_PEAK.z);
   
   // Create and position the snowboarder
   snowboarder = createSnowboarder();
   
-  // Start the snowboarder near the peak position, but on solid ground
-  const startX = orbitTarget.x + 0.1; // Slightly offset from exact peak
-  const startZ = orbitTarget.z + 0.1; // to ensure we're on a slope
-  const terrainHeight = getTerrainHeight(startX, startZ);
+  // Spawn snowboarder directly at the mountain peak using static coordinates
+  const peakX = SNOWBOARDER_SPAWN.x;
+  const peakZ = SNOWBOARDER_SPAWN.z;
   
-  // Place directly on terrain surface (no falling)
-  snowboarderSettings.position.set(startX, terrainHeight + 0.005, startZ); // Tiny offset for tiny snowboarder
+  // Use static coordinates instead of terrain height calculation
+  snowboarderSettings.position.set(SNOWBOARDER_SPAWN.x, SNOWBOARDER_SPAWN.y, SNOWBOARDER_SPAWN.z);
   snowboarder.position.copy(snowboarderSettings.position);
   
   scene.add(snowboarder);
-  console.log('🏂 Snowboarder spawned on ground near peak');
-  console.log('🎯 Peak reference point:', orbitTarget);
-  console.log('🏂 Snowboarder position:', snowboarderSettings.position);
-  console.log('🌍 Terrain height at spawn:', terrainHeight);
+  
+  // DETAILED LOGGING FOR STATIC COORDINATES
   
   // Now create snow system centered on the mountain
   createSnowSystem();
-  console.log('❄️ Snow system created and centered on mountain peak');
   
   // Initialize camera position to match first orbit position - prevents initial tween
   initializeCameraPosition();
@@ -722,7 +792,6 @@ function initializeCameraPosition() {
   camera.position.set(x, y, z);
   camera.lookAt(initialTarget);
   
-  console.log('📹 Camera initialized at seamless starting position');
 }
 
 // --- Animation Loop ---
@@ -738,7 +807,6 @@ function updateCameraPosition() {
     cameraSettings.autoRotate = true;
     // Sync auto-rotate angle to current manual position for seamless continuation
     autoRotateAngle = mouseState.phi;
-    console.log('🔄 Auto-rotate activated (idle detected) - continuing from current position');
   }
   
   let currentPhi = mouseState.phi;
@@ -785,7 +853,6 @@ function updateCameraPosition() {
 // --- Ultra-Robust Anti-Clipping System ---
 function preventMountainClipping(target, desiredPos) {
   if (!mountainMesh) {
-    console.warn('⚠️ No mountainMesh found for collision detection');
     return desiredPos;
   }
   
@@ -817,8 +884,6 @@ function preventMountainClipping(target, desiredPos) {
       const hitDistance = target.distanceTo(hits[0].point);
       const safeDistance = Math.max(SAFETY_BUFFER, hitDistance * (isFollowingSnowboarder ? 0.9 : 0.7));
       
-      console.log('🚫 Clipping prevented! Moving camera to safe distance:', safeDistance);
-      
       return new THREE.Vector3()
         .copy(direction)
         .multiplyScalar(safeDistance)
@@ -829,7 +894,6 @@ function preventMountainClipping(target, desiredPos) {
   // When following snowboarder, be much more permissive about minimum distance
   const minDistance = isFollowingSnowboarder ? 0.02 : 0.8;
   if (distance < minDistance) {
-    console.log('🚫 Enforcing minimum distance:', minDistance);
     return new THREE.Vector3()
       .copy(direction)
       .multiplyScalar(minDistance)
@@ -919,7 +983,6 @@ function animate() {
 }
 
 // --- Initialize ---
-console.log('🟢 Initializing systems...');
 setupMouseControls();
 setupGlobalInputDetection(); // Enable comprehensive input detection
 animate();
@@ -933,15 +996,4 @@ window.addEventListener('resize', () => {
 
 // Show initial instructions
 setTimeout(() => {
-  console.log('🎮 Controls Ready!');
-  console.log('🎥 CAMERA:');
-  console.log('• Right-click + drag = Free camera look');
-  console.log('• Scroll wheel = Zoom in/out');
-  console.log('• R = Reset camera');
-  console.log('');
-  console.log('🏂 SNOWBOARDER:');
-  console.log('• W/↑ = Move forward');
-  console.log('• S/↓ = Move backward');
-  console.log('• A/← = Turn left');
-  console.log('• D/→ = Turn right');
 }, 1000);
