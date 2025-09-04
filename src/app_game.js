@@ -11,7 +11,7 @@ const cameraSettings = {
   speed: 0.003,  // Smooth rotation speed
   autoRotate: true,  // Start with auto-rotate on
   fov: 30,  // Wider field of view for close-up
-  minRadius: 0.05,  // Allow very close zoom to snowboarder
+  minRadius: 0.1,  // Minimum zoom distance
   maxRadius: 5.0,  // Don't need to go too far
   minFov: 10,
   maxFov: 120
@@ -51,13 +51,108 @@ renderer.setClearColor(0x87CEEB, 1); // Sky blue background to contrast with whi
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
+// --- Floating Text Overlay ---
+function createFloatingText() {
+  // Create main text container
+  const textContainer = document.createElement('div');
+  textContainer.id = 'floating-text-container';
+  textContainer.style.cssText = `
+    position: fixed;
+    top: 120px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 900;
+    font-family: 'Arial', sans-serif;
+    text-align: center;
+    color: #ffffff;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    pointer-events: none;
+    user-select: none;
+    animation: fadeInDown 2s ease-out;
+  `;
+  
+  // Main name
+  const nameElement = document.createElement('h1');
+  nameElement.id = 'floating-name';
+  nameElement.textContent = 'Joshua Morvant';
+  nameElement.style.cssText = `
+    margin: 0;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 300;
+    letter-spacing: 3px;
+    margin-bottom: 10px;
+  `;
+  
+  // Subtitle
+  const subtitleElement = document.createElement('p');
+  subtitleElement.id = 'floating-subtitle';
+  subtitleElement.textContent = '- Snowboarding / Software';
+  subtitleElement.style.cssText = `
+    margin: 0;
+    font-size: clamp(1rem, 2.5vw, 1.4rem);
+    font-weight: 400;
+    letter-spacing: 2px;
+    opacity: 0.9;
+    white-space: nowrap;
+  `;
+  
+  // Add CSS animations
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes fadeInDown {
+      0% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-30px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+    
+    #floating-text-container:hover {
+      transform: translateX(-50%) scale(1.05);
+      transition: transform 0.3s ease;
+    }
+    
+    @media (max-width: 768px) {
+      #floating-text-container {
+        top: 20px;
+      }
+      #floating-name {
+        letter-spacing: 1px;
+      }
+      #floating-subtitle {
+        letter-spacing: 1px;
+      }
+    }
+  `;
+  
+  document.head.appendChild(style);
+  
+  // Add elements to container
+  textContainer.appendChild(nameElement);
+  textContainer.appendChild(subtitleElement);
+  
+  // Store reference for dynamic positioning
+  textContainer.baseTopPosition = 120;
+  
+  // Add container to page
+  document.body.appendChild(textContainer);
+  
+  return textContainer;
+}
+
+// Create the floating text
+const floatingText = createFloatingText();
+
 // --- Snow Particle System ---
 const snowSettings = {
   count: 20000,        // Keep your high particle count
   area: 15,            // Back to original concentrated area
   speed: 0.05,         // Fast fall speed
   windStrength: 0.02,  // Strong wind
-  size: 0.025,         // Good visible size
+  size: 0.015,         // Good visible size
   windDirection: 0.6   // Diagonal wind for realism
 };
 
@@ -235,139 +330,7 @@ scene.add(directionalLight);
 scene.background = new THREE.Color(0xf0f8ff); // Alice blue for snowy atmosphere
 scene.fog = new THREE.Fog(0xf0f8ff, 20, 100); // Add fog for atmospheric depth
 
-// --- Snowboarder Character ---
-let snowboarder = null;
 let mountainMesh = null;
-
-const snowboarderSettings = {
-  position: new THREE.Vector3(0, 0, 0),
-  velocity: new THREE.Vector3(0, 0, 0),
-  speed: 0.0005,     // Extremely small movement (was 0.003)
-  turnSpeed: .05,  // Very slow turning (was 0.008)
-  gravity: 0.00005,  // Almost no gravity (was 0.0003)
-  friction: 0.999,   // Very high friction (was 0.995)
-  rotation: 0
-};
-
-function createSnowboarder() {
-  const boarderGroup = new THREE.Group();
-  
-  // --- Body (torso) ---
-  const bodyGeometry = new THREE.CylinderGeometry(0.15, 0.18, 0.5, 8);
-  const bodyMaterial = new THREE.MeshLambertMaterial({ color: 0x1565C0 }); // Blue jacket
-  const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-  body.position.y = 0.4;
-  boarderGroup.add(body);
-  
-  // --- Head ---
-  const headGeometry = new THREE.SphereGeometry(0.12, 12, 8);
-  const headMaterial = new THREE.MeshLambertMaterial({ color: 0xFFDBAC }); // Skin tone
-  const head = new THREE.Mesh(headGeometry, headMaterial);
-  head.position.y = 0.75;
-  boarderGroup.add(head);
-  
-  // --- Helmet ---
-  const helmetGeometry = new THREE.SphereGeometry(0.14, 12, 8);
-  const helmetMaterial = new THREE.MeshLambertMaterial({ color: 0xD32F2F }); // Red helmet
-  const helmet = new THREE.Mesh(helmetGeometry, helmetMaterial);
-  helmet.position.y = 0.75;
-  helmet.scale.set(1, 0.8, 1); // Flatten slightly for realistic helmet shape
-  boarderGroup.add(helmet);
-  
-  // --- Goggles ---
-  const gogglesGeometry = new THREE.TorusGeometry(0.08, 0.02, 8, 16);
-  const gogglesMaterial = new THREE.MeshLambertMaterial({ color: 0x212121 }); // Black goggles
-  const goggles = new THREE.Mesh(gogglesGeometry, gogglesMaterial);
-  goggles.position.set(0, 0.75, 0.12);
-  goggles.rotation.x = Math.PI / 2;
-  boarderGroup.add(goggles);
-  
-  // --- Arms ---
-  const armGeometry = new THREE.CapsuleGeometry(0.06, 0.35, 4, 8);
-  const armMaterial = new THREE.MeshLambertMaterial({ color: 0x1565C0 }); // Match jacket
-  
-  // Left arm
-  const leftArm = new THREE.Mesh(armGeometry, armMaterial);
-  leftArm.position.set(-0.2, 0.45, 0);
-  leftArm.rotation.z = 0.3;
-  leftArm.rotation.x = -0.2;
-  boarderGroup.add(leftArm);
-  
-  // Right arm
-  const rightArm = new THREE.Mesh(armGeometry, armMaterial);
-  rightArm.position.set(0.2, 0.45, 0);
-  rightArm.rotation.z = -0.3;
-  rightArm.rotation.x = -0.2;
-  boarderGroup.add(rightArm);
-  
-  // --- Legs ---
-  const legGeometry = new THREE.CapsuleGeometry(0.08, 0.4, 4, 8);
-  const legMaterial = new THREE.MeshLambertMaterial({ color: 0x424242 }); // Dark pants
-  
-  // Left leg
-  const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
-  leftLeg.position.set(-0.08, 0.05, 0);
-  boarderGroup.add(leftLeg);
-  
-  // Right leg
-  const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
-  rightLeg.position.set(0.08, 0.05, 0);
-  boarderGroup.add(rightLeg);
-  
-  // --- Snowboard (more realistic) ---
-  const boardGeometry = new THREE.BoxGeometry(1.2, 0.08, 0.25);
-  const boardMaterial = new THREE.MeshLambertMaterial({ color: 0xFF6F00 }); // Orange board
-  const board = new THREE.Mesh(boardGeometry, boardMaterial);
-  board.position.y = -0.1;
-  // Add some curvature to the board
-  board.rotation.x = 0.05;
-  boarderGroup.add(board);
-  
-  // --- Board bindings ---
-  const bindingGeometry = new THREE.BoxGeometry(0.15, 0.05, 0.2);
-  const bindingMaterial = new THREE.MeshLambertMaterial({ color: 0x212121 }); // Black bindings
-  
-  // Left binding
-  const leftBinding = new THREE.Mesh(bindingGeometry, bindingMaterial);
-  leftBinding.position.set(-0.3, -0.05, 0);
-  boarderGroup.add(leftBinding);
-  
-  // Right binding
-  const rightBinding = new THREE.Mesh(bindingGeometry, bindingMaterial);
-  rightBinding.position.set(0.3, -0.05, 0);
-  boarderGroup.add(rightBinding);
-  
-  // --- Gloves ---
-  const gloveGeometry = new THREE.SphereGeometry(0.04, 8, 6);
-  const gloveMaterial = new THREE.MeshLambertMaterial({ color: 0x37474F }); // Dark gloves
-  
-  // Left glove
-  const leftGlove = new THREE.Mesh(gloveGeometry, gloveMaterial);
-  leftGlove.position.set(-0.3, 0.3, 0);
-  boarderGroup.add(leftGlove);
-  
-  // Right glove
-  const rightGlove = new THREE.Mesh(gloveGeometry, gloveMaterial);
-  rightGlove.position.set(0.3, 0.3, 0);
-  boarderGroup.add(rightGlove);
-  
-  // --- Boots ---
-  const bootGeometry = new THREE.BoxGeometry(0.12, 0.08, 0.25);
-  const bootMaterial = new THREE.MeshLambertMaterial({ color: 0x795548 }); // Brown boots
-  
-  // Left boot
-  const leftBoot = new THREE.Mesh(bootGeometry, bootMaterial);
-  leftBoot.position.set(-0.08, -0.15, 0.05);
-  boarderGroup.add(leftBoot);
-  
-  // Right boot
-  const rightBoot = new THREE.Mesh(bootGeometry, bootMaterial);
-  rightBoot.position.set(0.08, -0.15, 0.05);
-  boarderGroup.add(rightBoot);
-  
-  boarderGroup.scale.set(0.05, 0.05, 0.05); // Keep tiny scale for mountain
-  return boarderGroup;
-}
 
 function getTerrainHeight(x, z) {
   if (!mountainMesh) return 0;
@@ -381,68 +344,6 @@ function getTerrainHeight(x, z) {
     return intersects[0].point.y;
   }
   return 0;
-}
-
-function updateSnowboarder() {
-  if (!snowboarder) return;
-  
-  // Handle input
-  handleSnowboarderInput();
-  
-  // Apply gravity and friction
-  snowboarderSettings.velocity.y -= snowboarderSettings.gravity;
-  snowboarderSettings.velocity.multiplyScalar(snowboarderSettings.friction);
-  
-  // Update position
-  snowboarderSettings.position.add(snowboarderSettings.velocity);
-  
-  // Get terrain height and adjust Y position
-  const terrainHeight = getTerrainHeight(snowboarderSettings.position.x, snowboarderSettings.position.z);
-  if (snowboarderSettings.position.y < terrainHeight + 0.005) {  // Very small offset for tiny scale
-    snowboarderSettings.position.y = terrainHeight + 0.005;
-    snowboarderSettings.velocity.y = 0;
-    // Heavy friction when on ground - almost stop movement
-    snowboarderSettings.velocity.multiplyScalar(0.98);
-  }
-  
-  // Update snowboarder mesh position and rotation
-  snowboarder.position.copy(snowboarderSettings.position);
-  snowboarder.rotation.y = snowboarderSettings.rotation;
-  
-  // Tilt the snowboarder based on velocity for realistic movement
-  const speed = snowboarderSettings.velocity.length();
-  snowboarder.rotation.z = Math.sin(Date.now() * 0.01) * speed * 0.1; // Slight wobble while moving
-}
-
-function handleSnowboarderInput() {
-  const moveVector = new THREE.Vector3();
-  
-  if (keys['KeyW'] || keys['ArrowUp']) {
-    // Move forward in the direction the snowboarder is facing
-    moveVector.x = Math.sin(snowboarderSettings.rotation) * snowboarderSettings.speed;
-    moveVector.z = Math.cos(snowboarderSettings.rotation) * snowboarderSettings.speed;
-  }
-  if (keys['KeyS'] || keys['ArrowDown']) {
-    // Move backward
-    moveVector.x = -Math.sin(snowboarderSettings.rotation) * snowboarderSettings.speed * 0.5;
-    moveVector.z = -Math.cos(snowboarderSettings.rotation) * snowboarderSettings.speed * 0.5;
-  }
-  if (keys['KeyA'] || keys['ArrowLeft']) {
-    // Turn left
-    snowboarderSettings.rotation += snowboarderSettings.turnSpeed;
-  }
-  if (keys['KeyD'] || keys['ArrowRight']) {
-    // Turn right
-    snowboarderSettings.rotation -= snowboarderSettings.turnSpeed;
-  }
-  
-  // Add movement to velocity
-  snowboarderSettings.velocity.add(moveVector);
-  
-  // Limit max velocity - tiny for tiny snowboarder on massive mountain
-  if (snowboarderSettings.velocity.length() > 0.002) {  // Extremely low limit
-    snowboarderSettings.velocity.normalize().multiplyScalar(0.002);
-  }
 }
 
 // --- Mouse Controls ---
@@ -621,12 +522,6 @@ function isZoomSafe(testRadius) {
   
   // Get current target
   let currentTarget = orbitTarget;
-  let isFollowingSnowboarder = false;
-  if (followSnowboarder && snowboarder) {
-    currentTarget = snowboarderSettings.position.clone();
-    currentTarget.y += 0.04;
-    isFollowingSnowboarder = true;
-  }
   
   // Calculate where camera would be at this radius
   const testX = currentTarget.x + testRadius * Math.sin(mouseState.theta) * Math.cos(mouseState.phi);
@@ -636,29 +531,18 @@ function isZoomSafe(testRadius) {
   const testPos = new THREE.Vector3(testX, testY, testZ);
   const direction = new THREE.Vector3().subVectors(testPos, currentTarget).normalize();
   
-  // When following snowboarder, be much more permissive with close zoom
-  if (isFollowingSnowboarder) {
-    // Allow very close zoom to snowboarder - only check for actual mountain collision
-    const raycaster = new THREE.Raycaster(currentTarget, direction, 0, testRadius + 0.1);
-    const intersects = raycaster.intersectObject(mountainMesh, true);
-    
-    // Allow minimum distance of 0.02 when following snowboarder (very close!)
-    return intersects.length === 0 && testRadius >= 0.02;
-  } else {
-    // When orbiting mountain peak, allow closer zoom for cinematic shots
-    const ZOOM_SAFETY_BUFFER = 0.3; // Reduced buffer for closer zoom
-    const raycaster = new THREE.Raycaster(currentTarget, direction, 0, testRadius + ZOOM_SAFETY_BUFFER);
-    const intersects = raycaster.intersectObject(mountainMesh, true);
-    
-    const MIN_SAFE_ZOOM = 0.2; // Much closer minimum zoom for cinematic mode
-    return intersects.length === 0 && testRadius >= MIN_SAFE_ZOOM;
-  }
+  
+  // When orbiting mountain peak, allow closer zoom for cinematic shots
+  const ZOOM_SAFETY_BUFFER = 0.3; // Reduced buffer for closer zoom
+  const raycaster = new THREE.Raycaster(currentTarget, direction, 0, testRadius + ZOOM_SAFETY_BUFFER);
+  const intersects = raycaster.intersectObject(mountainMesh, true);
+  
+  const MIN_SAFE_ZOOM = 0.2; // Much closer minimum zoom for cinematic mode
+  return intersects.length === 0 && testRadius >= MIN_SAFE_ZOOM;
 }
 
 // --- Comprehensive Input Detection ---
 function setupGlobalInputDetection() {
-  // NO general keyboard detection - only WASD will be detected in keyboard handlers
-  
   // Detect scroll anywhere
   document.addEventListener('wheel', registerInput);
   
@@ -681,23 +565,12 @@ function registerInput() {
 
 // --- Keyboard Controls ---
 const keys = {};
-let followSnowboarder = false; // Keep gameplay cam in background, use cinematic orbit
 
 document.addEventListener('keydown', (e) => { 
   keys[e.code] = true; 
-  
-  // Only WASD keys reset the cinematic timer
-  if (e.code === 'KeyW' || e.code === 'KeyA' || e.code === 'KeyS' || e.code === 'KeyD') {
-    registerInput();
-  }
 });
 document.addEventListener('keyup', (e) => { 
   keys[e.code] = false; 
-  
-  // Only WASD keys reset the cinematic timer
-  if (e.code === 'KeyW' || e.code === 'KeyA' || e.code === 'KeyS' || e.code === 'KeyD') {
-    registerInput();
-  }
 });
 
 function handleKeyboardControls() {
@@ -706,9 +579,7 @@ function handleKeyboardControls() {
     mouseState.theta = Math.PI / 4;
     cameraSettings.radius = 3.4;
     cameraSettings.autoRotate = true;
-    followSnowboarder = false;
     keys['KeyR'] = false;
-    // R does NOT reset cinematic timer - only WASD does
   }
 }
 
@@ -736,23 +607,9 @@ loadFile('/prefabs/mountainScene.glb', scene, (model) => {
   
   // Use static coordinates instead of dynamic peak finding for better performance
   const MOUNTAIN_PEAK = { x: -0.06617075204849243, y: 0.6651918888092041, z: -0.1258300095796585 };
-  const SNOWBOARDER_SPAWN = { x: -0.06617075204849243, y: 0.6701918888092183, z: -0.1258300095796585 };
   
   // Set orbit target to the known peak coordinates
   orbitTarget.set(MOUNTAIN_PEAK.x, MOUNTAIN_PEAK.y, MOUNTAIN_PEAK.z);
-  
-  // Create and position the snowboarder
-  snowboarder = createSnowboarder();
-  
-  // Spawn snowboarder directly at the mountain peak using static coordinates
-  const peakX = SNOWBOARDER_SPAWN.x;
-  const peakZ = SNOWBOARDER_SPAWN.z;
-  
-  // Use static coordinates instead of terrain height calculation
-  snowboarderSettings.position.set(SNOWBOARDER_SPAWN.x, SNOWBOARDER_SPAWN.y, SNOWBOARDER_SPAWN.z);
-  snowboarder.position.copy(snowboarderSettings.position);
-  
-  scene.add(snowboarder);
   
   // DETAILED LOGGING FOR STATIC COORDINATES
   
@@ -767,12 +624,6 @@ loadFile('/prefabs/mountainScene.glb', scene, (model) => {
 function initializeCameraPosition() {
   // Set initial camera position to match where auto-rotate will start
   let initialTarget = orbitTarget;
-  
-  // If following snowboarder, use snowboarder position as target
-  if (followSnowboarder && snowboarder) {
-    initialTarget = snowboarderSettings.position.clone();
-    initialTarget.y += 0.04; // Look at tiny snowboarder's head level
-  }
   
   // Start at a nice viewing angle that matches auto-rotate
   const initialPhi = 0; // Start at front view
@@ -812,12 +663,6 @@ function updateCameraPosition() {
   let currentPhi = mouseState.phi;
   let currentTheta = mouseState.theta;
   let currentTarget = orbitTarget;
-  
-  // If following snowboarder, use snowboarder position as target
-  if (followSnowboarder && snowboarder) {
-    currentTarget = snowboarderSettings.position.clone();
-    currentTarget.y += 0.04; // Look at tiny snowboarder's head level (scaled down)
-  }
   
   // Handle auto-rotation with seamless transitions
   if (cameraSettings.autoRotate) {
@@ -859,11 +704,8 @@ function preventMountainClipping(target, desiredPos) {
   const direction = new THREE.Vector3().subVectors(desiredPos, target).normalize();
   const distance = target.distanceTo(desiredPos);
   
-  // Check if we're following the snowboarder
-  const isFollowingSnowboarder = followSnowboarder && snowboarder;
-  
-  // Use different safety margins depending on what we're orbiting
-  const SAFETY_BUFFER = isFollowingSnowboarder ? 0.1 : 1.0; // Much smaller buffer when following snowboarder
+  // Use safety margins for mountain orbiting
+  const SAFETY_BUFFER = 1.0;
   
   // Multi-point collision detection for thorough coverage
   const checkPoints = [
@@ -882,7 +724,7 @@ function preventMountainClipping(target, desiredPos) {
     if (hits.length > 0) {
       // Found intersection - compute safe position
       const hitDistance = target.distanceTo(hits[0].point);
-      const safeDistance = Math.max(SAFETY_BUFFER, hitDistance * (isFollowingSnowboarder ? 0.9 : 0.7));
+      const safeDistance = Math.max(SAFETY_BUFFER, hitDistance * 0.7);
       
       return new THREE.Vector3()
         .copy(direction)
@@ -891,8 +733,8 @@ function preventMountainClipping(target, desiredPos) {
     }
   }
   
-  // When following snowboarder, be much more permissive about minimum distance
-  const minDistance = isFollowingSnowboarder ? 0.02 : 0.8;
+  // Maintain minimum distance for mountain orbiting
+  const minDistance = 0.8;
   if (distance < minDistance) {
     return new THREE.Vector3()
       .copy(direction)
@@ -974,7 +816,6 @@ function animate() {
   requestAnimationFrame(animate);
   
   handleKeyboardControls();
-  updateSnowboarder(); // Update snowboarder physics and movement
   updateCameraPosition();
   updateSnowSystem(); // Update falling snow particles
   updateCinematicBars(); // Update cinematic bars animation
@@ -993,7 +834,3 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
-
-// Show initial instructions
-setTimeout(() => {
-}, 1000);
