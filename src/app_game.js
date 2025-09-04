@@ -56,9 +56,10 @@ function createFloatingText() {
   // Create main text container
   const textContainer = document.createElement('div');
   textContainer.id = 'floating-text-container';
+  textContainer.baseTopPosition = 30; // Store base position for movement - moved higher
   textContainer.style.cssText = `
     position: fixed;
-    top: 120px;
+    top: 60px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 900;
@@ -135,7 +136,7 @@ function createFloatingText() {
   textContainer.appendChild(subtitleElement);
   
   // Store reference for dynamic positioning
-  textContainer.baseTopPosition = 120;
+  textContainer.baseTopPosition = 60; // Moved higher to match initial position
   
   // Add container to page
   document.body.appendChild(textContainer);
@@ -311,6 +312,15 @@ function updateCinematicBars() {
   const height = Math.round(cinematicBars.currentHeight);
   cinematicBars.topBar.style.height = `${height}px`;
   cinematicBars.bottomBar.style.height = `${height}px`;
+}
+
+function updateFloatingTextPosition() {
+  // Move text down by the current height of the top cinematic bar
+  const textContainer = document.getElementById('floating-text-container');
+  if (textContainer && textContainer.baseTopPosition !== undefined) {
+    const newTopPosition = textContainer.baseTopPosition + cinematicBars.currentHeight;
+    textContainer.style.top = `${newTopPosition}px`;
+  }
 }
 
 // Create the bars
@@ -763,73 +773,6 @@ function preventMountainClipping(target, desiredPos) {
   return desiredPos;
 }
 
-// --- Camera Collision Detection ---
-function checkCameraCollision(target, desiredCameraPos) {
-  if (!mountainMesh) return desiredCameraPos;
-  
-  // Create a ray from target to desired camera position
-  const direction = new THREE.Vector3().subVectors(desiredCameraPos, target).normalize();
-  const distance = target.distanceTo(desiredCameraPos);
-  
-  // Cast ray to check for mountain intersection
-  const raycaster = new THREE.Raycaster(target, direction, 0, distance);
-  const intersects = raycaster.intersectObject(mountainMesh, true);
-  
-  if (intersects.length > 0) {
-    // Found collision - place camera before the intersection point
-    const intersectionPoint = intersects[0].point;
-    const safeDistance = 0.3; // Reasonable minimum distance from mountain surface
-    const distanceToIntersection = target.distanceTo(intersectionPoint);
-    
-    // Only adjust if we're actually too close
-    if (distanceToIntersection < safeDistance) {
-      // Move camera back to safe distance
-      const safePosition = new THREE.Vector3()
-        .subVectors(intersectionPoint, target)
-        .normalize()
-        .multiplyScalar(Math.max(cameraSettings.minRadius, distanceToIntersection - safeDistance))
-        .add(target);
-      
-      return safePosition;
-    }
-  }
-  
-  // No collision or collision is far enough, use desired position
-  return desiredCameraPos;
-}
-
-function getMaxSafeRadius(requestedRadius) {
-  if (!mountainMesh) return requestedRadius;
-  
-  // Get current target and camera angles
-  let currentTarget = orbitTarget;
-  if (followSnowboarder && snowboarder) {
-    currentTarget = snowboarderSettings.position.clone();
-    currentTarget.y += 0.04;
-  }
-  
-  // Calculate camera position with requested radius
-  const testX = currentTarget.x + requestedRadius * Math.sin(mouseState.theta) * Math.cos(mouseState.phi);
-  const testY = currentTarget.y + requestedRadius * Math.cos(mouseState.theta);
-  const testZ = currentTarget.z + requestedRadius * Math.sin(mouseState.theta) * Math.sin(mouseState.phi);
-  
-  const testPosition = new THREE.Vector3(testX, testY, testZ);
-  const direction = new THREE.Vector3().subVectors(testPosition, currentTarget).normalize();
-  
-  // Cast ray to find maximum safe distance
-  const raycaster = new THREE.Raycaster(currentTarget, direction, 0, requestedRadius);
-  const intersects = raycaster.intersectObject(mountainMesh, true);
-  
-  if (intersects.length > 0) {
-    // Return safe distance with reasonable buffer
-    const maxSafeDistance = currentTarget.distanceTo(intersects[0].point) - 0.2;
-    return Math.max(cameraSettings.minRadius, maxSafeDistance);
-  }
-  
-  // No collision, use requested radius
-  return requestedRadius;
-}
-
 function animate() {
   requestAnimationFrame(animate);
   
@@ -837,6 +780,7 @@ function animate() {
   updateCameraPosition();
   updateSnowSystem(); // Update falling snow particles
   updateCinematicBars(); // Update cinematic bars animation
+  updateFloatingTextPosition(); // Move text with cinematic bars
   
   renderer.render(scene, camera);
 }
