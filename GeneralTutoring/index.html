@@ -63,7 +63,7 @@
 			<li>1 hour tutoring</li>
 		</ul>
 		<div style="display:flex;align-items:center;gap:10px;margin:18px 0 24px 0;">
-			<!-- <p style="color:#347d1b;font-weight:bold;margin:0;">Amount: $45.00 USD</p> -->
+			<p style="color:#347d1b;font-weight:bold;margin:0;">Amount: $45.00 USD</p>
 			<span style="font-size:0.9em;color:#888;">+$1.00 service fee</span>
 		</div>
 		<div id="paypal-button-container"></div>
@@ -78,7 +78,7 @@
 		paypal.Buttons({
 			fundingSource: paypal.FUNDING.CARD,
 			createOrder: async function(data, actions) {
-				const amount = 1.00; // Hardcoded amount
+				const amount = 46.00; // Hardcoded amount
 				const response = await fetch('/create-order', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
@@ -94,8 +94,13 @@
 					body: JSON.stringify({ orderId: data.orderID })
 				});
 				const captureData = await response.json();
-				document.getElementById('message').textContent = 
-					`Payment of $${captureData.purchase_units[0].payments.captures[0].amount.value} completed!`;
+				   document.getElementById('message').innerHTML = `
+					   <div style="background:#e6ffe6;border:2px solid #2ecc40;padding:24px 12px;margin:18px 0;font-size:1.5em;font-weight:bold;color:#2ecc40;text-align:center;border-radius:12px;box-shadow:0 2px 8px #2ecc4022;">
+						   <span style='font-size:2.5em;display:block;margin-bottom:10px;'>✔️</span>
+						   Payment of $${captureData.purchase_units[0].payments.captures[0].amount.value} completed!<br>
+						   <span style='font-size:1em;color:#222;'>Thank you for your payment!</span>
+					   </div>
+				   `;
 			},
 			onError: function(err) {
 				document.getElementById('message').textContent = 'Payment failed: ' + err;
