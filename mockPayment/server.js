@@ -1,11 +1,13 @@
 const express = require('express');
+const cors = require('cors');
 const app = express();
+app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
 const CLIENT_ID = 'AY9oYRC-YpMBFa8nJBSXcNNicaOt40-aSKJz_sJNO-_2_0eLbt9aya8_6POSsL11EX5a95LDC6TkBZLB';
 const SECRET = 'ENAQcGsqAaO9rVMqRz5IspWydKOove45cm-TPtme59IYvGouxMSWl__yRhWLpOUdawi4JovSYLeWnLf1';
-const PAYPAL_API = 'https://api-m.paypal.com'; // use live for production
+const PAYPAL_API = 'https://api-m.paypal.com'; // production endpoint
 
 async function generateAccessToken() {
     const auth = Buffer.from(`${CLIENT_ID}:${SECRET}`).toString('base64');
@@ -31,7 +33,10 @@ app.post('/create-order', async (req, res) => {
             },
             body: JSON.stringify({
                 intent: 'CAPTURE',
-                purchase_units: [{ amount: { currency_code: 'USD', value: amount } }]
+                purchase_units: [{ amount: { currency_code: 'USD', value: amount } }],
+                application_context: {
+                    shipping_preference: "NO_SHIPPING"
+                }
             })
         });
 
