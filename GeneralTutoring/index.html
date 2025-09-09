@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<style>
+		body {
+			margin: 0;
+			padding: 0;
+			font-family: Arial, sans-serif;
+			background: #fff;
+		}
+		.container {
+			max-width: 480px;
+			margin: 0 auto;
+			padding: 16px;
+		}
+		h2 {
+			font-size: 1.3em;
+			margin-bottom: 10px;
+		}
+		p {
+			font-size: 1.1em;
+		}
+		#paypal-button-container {
+			margin-top: 18px;
+		}
+		#message {
+			margin-top: 18px;
+			font-size: 1em;
+		}
+		.powered-by {
+			margin-top: 16px;
+			text-align: center;
+		}
+		@media (max-width: 600px) {
+			.container {
+				padding: 8px;
+			}
+			h2 {
+				font-size: 1.1em;
+			}
+			p {
+				font-size: 1em;
+			}
+			#paypal-button-container {
+				margin-top: 12px;
+			}
+			#message {
+				font-size: 0.95em;
+			}
+			.powered-by img {
+				height: 28px !important;
+			}
+		}
+	</style>
+	<script src="https://www.paypal.com/sdk/js?client-id=AY9oYRC-YpMBFa8nJBSXcNNicaOt40-aSKJz_sJNO-_2_0eLbt9aya8_6POSsL11EX5a95LDC6TkBZLB&currency=USD"></script>
+	<title>PayPal Store</title>
+</head>
+<body>
+	<div class="container">
+		<h2>Pay Joshua Morvant with PayPal</h2>
+	<ul style="margin:18px 0 0 18px;padding:0;font-size:1.05em;color:#222;">
+			<li>1 hour tutoring</li>
+		</ul>
+		<div style="display:flex;align-items:center;gap:10px;margin:18px 0 24px 0;">
+			<p style="color:#347d1b;font-weight:bold;margin:0;">Amount: $45.00 USD</p>
+			<span style="font-size:0.9em;color:#888;">+$1.00 service fee</span>
+		</div>
+		<div id="paypal-button-container"></div>
+		<div class="powered-by">
+			<img src="https://techtolia.com/PayPal/assets/images/powered_by_paypal.png" alt="Powered by PayPal" style="height:40px;">
+		</div>
+		<div id="message"></div>
+	</div>
+
+	<script>
+	const devMode = false; // Set to false for production
+		paypal.Buttons({
+			fundingSource: paypal.FUNDING.CARD,
+			createOrder: async function(data, actions) {
+				const amount = 46.00; // Hardcoded amount
+				const response = await fetch('/create-order', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ amount })
+				});
+				const order = await response.json();
+				return order.id;
+			},
+			onApprove: async function(data, actions) {
+				const response = await fetch('/capture-order', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ orderId: data.orderID })
+				});
+				const captureData = await response.json();
+				document.getElementById('message').textContent = 
+					`Payment of $${captureData.purchase_units[0].payments.captures[0].amount.value} completed!`;
+			},
+			onError: function(err) {
+				document.getElementById('message').textContent = 'Payment failed: ' + err;
+			}
+		}).render('#paypal-button-container');
+
+		// Show big, clear confirmation message only if devMode is true
+		if (typeof devMode !== 'undefined' && devMode) {
+			document.getElementById('message').innerHTML = '<div style="background:#e6f7ff;border:2px solid #0070ba;padding:24px 12px;margin:18px 0;font-size:2em;font-weight:bold;color:#0070ba;text-align:center;border-radius:12px;box-shadow:0 2px 8px #0070ba22;">✔️ Payment simulation<br>$45.00 USD was successfully processed.<br><span style="font-size:0.6em;color:#333;">(Developer Mode)</span></div>';
+		}
+	</script>
+</body>
+</html>
