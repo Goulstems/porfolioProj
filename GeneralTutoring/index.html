@@ -63,7 +63,7 @@
 			<li>1 hour tutoring</li>
 		</ul>
 		<div style="display:flex;align-items:center;gap:10px;margin:18px 0 24px 0;">
-			<p style="color:#347d1b;font-weight:bold;margin:0;">Amount: $45.00 USD</p>
+			<!-- <p style="color:#347d1b;font-weight:bold;margin:0;">Amount: $45.00 USD</p> -->
 			<span style="font-size:0.9em;color:#888;">+$1.00 service fee</span>
 		</div>
 		<div id="paypal-button-container"></div>
@@ -78,7 +78,7 @@
 		paypal.Buttons({
 			fundingSource: paypal.FUNDING.CARD,
 			createOrder: async function(data, actions) {
-				const amount = 46.00; // Hardcoded amount
+				const amount = 1.00; // Hardcoded amount
 				const response = await fetch('/create-order', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
