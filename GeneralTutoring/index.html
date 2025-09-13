@@ -13,7 +13,7 @@
     <div class="container" style="margin-top:calc(28px + 0.25em);">
         <h2>Joshua M. Tutoring Services:</h2>
         <payment-div amount="50.00" service-fee="2.00" description="1 hour tutoring"></payment-div>
-        <payment-div amount="200.00" service-fee="2.00" description="4 hours tutoring (1 month)"></payment-div>
+        <payment-div amount="200.00" service-fee="6.00" description="4 hours tutoring (1 month)"></payment-div>
     </div>
     <footer>
         <small>JMLearning - Established 2025.</small>
@@ -62,6 +62,7 @@
       });
       e.detail.element.setSelected(true);
       selectedPaymentDiv = e.detail;
+      console.log('Selected amount:', selectedPaymentDiv.amount); // Log amount to console
       renderBottomPayPalButton();
     });
     window.addEventListener('payment-div-unselected', e => {
