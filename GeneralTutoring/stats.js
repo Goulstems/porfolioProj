@@ -3,16 +3,17 @@
 export function injectStats() {
   const statsDiv = document.createElement('div');
   statsDiv.className = 'stats-container';
-  statsDiv.style.position = 'fixed';
-  statsDiv.style.left = '50%';
-  statsDiv.style.top = '66vh';
-  statsDiv.style.transform = 'translateX(-50%)';
+  // Remove fixed positioning so stats scroll with the page
+  // statsDiv.style.position = 'fixed';
+  // statsDiv.style.left = '50%';
+  // statsDiv.style.top = '66vh';
+  // statsDiv.style.transform = 'translateX(-50%)';
   statsDiv.style.zIndex = '-2';
   statsDiv.style.width = '340px';
   statsDiv.style.display = 'flex';
   statsDiv.style.flexDirection = 'column';
   statsDiv.style.gap = '8px';
-  statsDiv.style.marginTop = '7.5em';
+  statsDiv.style.margin = '7.5em auto 0 auto';
   statsDiv.innerHTML = `
     <div class="stat-card" style="height:2em; min-width:180px; background:#fff; border-radius:22px; box-shadow:0 2px 8px #006ad122; border:1.5px solid #e0e0e0; display:flex; align-items:center; justify-content:space-between; padding:0 1.2em;">
       <span class="stat-title" style="color:#006ad1;font-weight:bold; text-align:left;">Hours tutored:</span>
