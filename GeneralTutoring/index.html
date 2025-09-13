@@ -112,7 +112,19 @@
           const captureData = await response.json();
           const msgDiv = document.createElement('div');
           msgDiv.id = 'bottom-paypal-message';
-          msgDiv.innerHTML = `<div style='background:#e6f7ff;border:2px solid #0070ba;padding:24px 12px;margin:18px 0;font-size:2em;font-weight:bold;color:#0070ba;text-align:center;border-radius:12px;box-shadow:0 2px 8px #0070ba22;'><span style='font-size:2.5em;display:block;margin-bottom:10px;'>✔️</span>Payment of $${captureData.purchase_units[0].payments.captures[0].amount.value} USD was successfully processed.</div>`;
+          let amountText = '';
+          try {
+            const pu = captureData.purchase_units?.[0];
+            const cap = pu?.payments?.captures?.[0];
+            if (cap?.amount?.value) {
+              amountText = `<div style='background:#e6f7ff;border:2px solid #0070ba;padding:24px 12px;margin:18px 0;font-size:2em;font-weight:bold;color:#0070ba;text-align:center;border-radius:12px;box-shadow:0 2px 8px #0070ba22;'><span style='font-size:2.5em;display:block;margin-bottom:10px;'>✔️</span>Payment of $${cap.amount.value} USD was successfully processed.</div>`;
+            } else {
+              amountText = `<div style='background:#ffe6e6;border:2px solid #ba0000;padding:24px 12px;margin:18px 0;font-size:1.5em;font-weight:bold;color:#ba0000;text-align:center;border-radius:12px;box-shadow:0 2px 8px #ba000022;'>Payment succeeded, but could not read amount from response.</div>`;
+            }
+          } catch (err) {
+            amountText = `<div style='background:#ffe6e6;border:2px solid #ba0000;padding:24px 12px;margin:18px 0;font-size:1.5em;font-weight:bold;color:#ba0000;text-align:center;border-radius:12px;box-shadow:0 2px 8px #ba000022;'>Payment succeeded, but response format was unexpected.</div>`;
+          }
+          msgDiv.innerHTML = amountText;
           btnContainer.appendChild(msgDiv);
           // After payment is captured and confirmed:
           window.dispatchEvent(new Event('paypal-payment-approved'));
