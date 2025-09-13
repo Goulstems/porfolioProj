@@ -13,7 +13,7 @@ export function injectStats() {
   statsDiv.style.display = 'flex';
   statsDiv.style.flexDirection = 'column';
   statsDiv.style.gap = '8px';
-  statsDiv.style.margin = '-7em auto 2em auto'; // Move stats up by 5em
+  statsDiv.style.margin = '-12em auto 2em auto'; // Move stats up by another 5em
   statsDiv.innerHTML = `
     <div class="stat-card" style="height:2em; min-width:180px; background:#fff; border-radius:22px; box-shadow:0 2px 8px #006ad122; border:1.5px solid #e0e0e0; display:flex; align-items:center; justify-content:space-between; padding:0 1.2em;">
       <span class="stat-title" style="color:#006ad1;font-weight:bold; text-align:left;">Hours tutored:</span>
