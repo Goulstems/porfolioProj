@@ -21,11 +21,11 @@
     <script>
     let selectedPaymentDiv = null;
     let paypalConfig = null;
-    fetch('/api/config')
+    fetch('http://joshuamorvant.com:3000/api/config')
       .then(res => res.json())
       .then(config => {
         paypalConfig = config;
-        window.paypalApiUrl = config.testing ? 'http://localhost:3000' : 'https://joshuamorvant.com';
+        window.paypalApiUrl = config.testing ? 'http://localhost:3000' : 'http://joshuamorvant.com:3000';
         const script = document.createElement('script');
         script.src = `https://www.paypal.com/sdk/js?client-id=${config.paypalClientId}&currency=USD`;
         script.onload = function() {

@@ -1,5 +1,3 @@
-
-
 require('dotenv').config({ path: __dirname + '/.env' });
 const express = require('express');
 const cors = require('cors');
@@ -106,3 +104,11 @@ app.post('/capture-order', async (req, res) => {
 });
 
 app.listen(3000, () => console.log('Server running on http://localhost:3000'));
+
+// If deploying behind nginx, add this to your nginx config:
+// location /api/ {
+//     proxy_pass http://localhost:3000/api/;
+//     proxy_set_header Host $host;
+//     proxy_set_header X-Real-IP $remote_addr;
+// }
+// This will forward /api/* requests to your Node.js server.
