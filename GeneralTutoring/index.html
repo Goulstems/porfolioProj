@@ -123,6 +123,14 @@
           btnContainer.appendChild(msgDiv);
         }
       }).render(btnContainer);
+      // Ensure 'Powered by PayPal' branding is visible
+      if (!document.getElementById('paypal-branding')) {
+        const branding = document.createElement('div');
+        branding.id = 'paypal-branding';
+        branding.style = 'margin-top:8px;text-align:center;';
+        branding.innerHTML = '<img src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_111x69.jpg" alt="Powered by PayPal" style="height:24px;">';
+        btnContainer.appendChild(branding);
+      }
     }
     window.addEventListener('paypal-sdk-ready', () => {
       if (selectedPaymentDiv) renderBottomPayPalButton();
