@@ -6,7 +6,7 @@ const cors = require('cors');
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static('/var/www/portfolioProj/GeneralTutoring'));
+app.use(express.static('/var/www/portfolioProj/'));
 
 
 app.get('/api/config', (req, res) => {
