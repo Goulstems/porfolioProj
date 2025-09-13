@@ -37,6 +37,18 @@ export function injectStats() {
   window.addEventListener('paypal-payment-approved', () => {
     statsDiv.style.display = 'flex';
   });
+  // Show stats when both payment-divs are unselected
+  window.addEventListener('payment-div-unselected', () => {
+    const selected = Array.from(document.querySelectorAll('payment-div')).some(div => div.selected);
+    if (!selected) {
+      statsDiv.style.display = 'flex';
+    }
+  });
+
+  // Show stats when PayPal window is closed (X pressed)
+  window.addEventListener('paypal-window-closed', () => {
+    statsDiv.style.display = 'flex';
+  });
 }
 
 // Auto-inject on module load
