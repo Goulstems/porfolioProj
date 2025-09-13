@@ -1,13 +1,42 @@
+
+
+require('dotenv').config({ path: __dirname + '/.env' });
 const express = require('express');
 const cors = require('cors');
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(__dirname + '/../GeneralTutoring'));
 
-const CLIENT_ID = 'AY9oYRC-YpMBFa8nJBSXcNNicaOt40-aSKJz_sJNO-_2_0eLbt9aya8_6POSsL11EX5a95LDC6TkBZLB';
-const SECRET = 'ENAQcGsqAaO9rVMqRz5IspWydKOove45cm-TPtme59IYvGouxMSWl__yRhWLpOUdawi4JovSYLeWnLf1';
-const PAYPAL_API = 'https://api-m.paypal.com'; // production endpoint
+
+app.get('/api/config', (req, res) => {
+    const config = {
+        testing: isTesting,
+        paypalClientId: CLIENT_ID,
+        paypalApi: PAYPAL_API
+    };
+    if (isTesting) {
+        config.paypalTestAccount = {
+            email: process.env.PAYPAL_TEST_EMAIL,
+            pass: process.env.PAYPAL_TEST_PASS,
+            name: process.env.PAYPAL_TEST_NAME,
+            card: process.env.PAYPAL_TEST_CARD,
+            exp: process.env.PAYPAL_TEST_EXP,
+            cvc: process.env.PAYPAL_TEST_CVC
+        };
+    }
+    res.json(config);
+});
+
+const isTesting = String(process.env.TESTING).toLowerCase() === 'true';
+const CLIENT_ID = isTesting ? process.env.PAYPAL_SANDBOX_CLIENT_ID : process.env.PAYPAL_PROD_CLIENT_ID;
+const SECRET = isTesting ? process.env.PAYPAL_SANDBOX_SECRET : process.env.PAYPAL_PROD_SECRET;
+const PAYPAL_API = isTesting ? process.env.PAYPAL_SANDBOX_API : process.env.PAYPAL_PROD_API;
+
+console.log('TESTING:', process.env.TESTING);
+console.log('PAYPAL_SANDBOX_CLIENT_ID:', process.env.PAYPAL_SANDBOX_CLIENT_ID);
+console.log('PAYPAL_PROD_CLIENT_ID:', process.env.PAYPAL_PROD_CLIENT_ID);
+console.log('Selected CLIENT_ID:', CLIENT_ID);
 
 async function generateAccessToken() {
     const auth = Buffer.from(`${CLIENT_ID}:${SECRET}`).toString('base64');

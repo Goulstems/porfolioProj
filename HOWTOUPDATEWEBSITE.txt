@@ -1,4 +1,0 @@
-in order to deploy website again(after updating git repo):
-
-ssh root@167.99.58.175
-cd /var/www/html && git pull origin main

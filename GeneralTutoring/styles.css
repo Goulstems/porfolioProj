@@ -1,0 +1,137 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background: #fff;
+    background-image: repeating-linear-gradient(0deg, #eaeaea 0px, #eaeaea 1px, transparent 1px, transparent 20px),
+                      repeating-linear-gradient(90deg, #eaeaea 0px, #eaeaea 1px, transparent 1px, transparent 20px);
+}
+.container {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 16px;
+    min-height: 700px;
+    overflow: visible;
+    position: relative;
+    z-index: 1;
+}
+h2 {
+    font-size: 1.3em;
+    margin-bottom: 10px;
+}
+p {
+    font-size: 1.1em;
+}
+#paypal-button-container {
+    margin-top: 18px;
+    min-height: 400px;
+    overflow: visible;
+}
+#message {
+    margin-top: 18px;
+    font-size: 1em;
+}
+.powered-by {
+    margin-top: 16px;
+    text-align: center;
+}
+.payment-option {
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 18px 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px #00000011;
+}
+.payment-option h2 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.15em;
+}
+.payment-option p {
+    margin: 0;
+}
+footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    text-align: center;
+    padding: 12px 0;
+    font-size: 1em;
+    color: #fff;
+    letter-spacing: 1px;
+    background: #006ad1;
+    z-index: 10;
+}
+.topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 48px;
+    background: #006ad1;
+    color: #fff;
+    font-size: 1.25em;
+    font-weight: bold;
+    text-align: center;
+    line-height: 48px;
+    z-index: 10;
+    letter-spacing: 1px;
+    box-shadow: 0 2px 8px #006ad144;
+}
+.stats-background {
+    background: none;
+    box-shadow: none;
+}
+.stats-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px #006ad122;
+    padding: 18px 24px;
+    min-width: 140px;
+    text-align: center;
+    border: 2px solid #e0e0e0;
+    font-family: Arial, sans-serif;
+}
+.stats-card h3 {
+    margin: 0 0 8px 0;
+    font-size: 1.1em;
+    color: #006ad1;
+    font-weight: 600;
+}
+.stats-value {
+    font-size: 1.25em;
+    color: #222;
+    font-weight: bold;
+}
+@media (max-width: 600px) {
+    .container {
+        padding: 8px;
+        min-height: 600px;
+    }
+    h2 {
+        font-size: 1.1em;
+    }
+    p {
+        font-size: 1em;
+    }
+    #paypal-button-container {
+        margin-top: 12px;
+        min-height: 350px;
+    }
+    #message {
+        font-size: 0.95em;
+    }
+    .powered-by img {
+        height: 28px !important;
+    }
+    .topbar {
+        height: 40px;
+        font-size: 1em;
+        line-height: 40px;
+    }
+    footer {
+        font-size: 0.95em;
+        padding: 8px 0;
+    }
+}
