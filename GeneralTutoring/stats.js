@@ -29,13 +29,14 @@ export function injectStats() {
   `;
   document.body.appendChild(statsDiv);
 
-  // Remove logic that hides stats on PayPal button click and payment approved
-  // window.addEventListener('paypal-button-clicked', () => {
-  //   statsDiv.style.display = 'none';
-  // });
-  // window.addEventListener('paypal-payment-approved', () => {
-  //   statsDiv.style.display = 'flex';
-  // });
+  // Hide stats on PayPal button click
+  window.addEventListener('paypal-button-clicked', () => {
+    statsDiv.style.display = 'none';
+  });
+  // Show stats after payment is approved
+  window.addEventListener('paypal-payment-approved', () => {
+    statsDiv.style.display = 'flex';
+  });
 
   // Show stats when both payment-divs are unselected
   window.addEventListener('payment-div-unselected', () => {
