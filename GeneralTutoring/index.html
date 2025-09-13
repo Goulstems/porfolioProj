@@ -21,18 +21,40 @@
     <script>
     let selectedPaymentDiv = null;
     let paypalConfig = null;
-    fetch('http://joshuamorvant.com:3000/api/config')
-      .then(res => res.json())
-      .then(config => {
-        paypalConfig = config;
-        window.paypalApiUrl = config.testing ? 'http://localhost:3000' : 'http://joshuamorvant.com:3000';
-        const script = document.createElement('script');
-        script.src = `https://www.paypal.com/sdk/js?client-id=${config.paypalClientId}&currency=USD`;
-        script.onload = function() {
-          window.dispatchEvent(new Event('paypal-sdk-ready'));
-        };
-        document.head.appendChild(script);
-      });
+    // fetch('/api/config')
+    //   .then(res => res.json())
+    //   .then(config => {
+    //     paypalConfig = config;
+    //     window.paypalApiUrl = config.testing ? 'http://localhost:3000' : 'https://joshuamorvant.com';
+    //     const script = document.createElement('script');
+    //     script.src = `https://www.paypal.com/sdk/js?client-id=${config.paypalClientId}&currency=USD`;
+    //     script.onload = function() {
+    //       window.dispatchEvent(new Event('paypal-sdk-ready'));
+    //     };
+    //     document.head.appendChild(script);
+    //   });
+
+    // Manually set .env variables for testing
+    paypalConfig = {
+      testing: false,
+      paypalClientId: 'AY9oYRC-YpMBFa8nJBSXcNNicaOt40-aSKJz_sJNO-_2_0eLbt9aya8_6POSsL11EX5a95LDC6TkBZLB',
+      paypalApi: 'https://api-m.paypal.com',
+      paypalTestAccount: {
+        email: 'sb-yok3r46103766@personal.example.com',
+        pass: '1U^xj!Mk',
+        name: 'John Doe',
+        card: '4032036087824189',
+        exp: '09/2030',
+        cvc: '000'
+      }
+    };
+    window.paypalApiUrl = 'https://joshuamorvant.com';
+    const script = document.createElement('script');
+    script.src = `https://www.paypal.com/sdk/js?client-id=${paypalConfig.paypalClientId}&currency=USD`;
+    script.onload = function() {
+      window.dispatchEvent(new Event('paypal-sdk-ready'));
+    };
+    document.head.appendChild(script);
 
     window.addEventListener('payment-div-selected', e => {
       document.querySelectorAll('payment-div').forEach(div => {
