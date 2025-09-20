@@ -21,40 +21,28 @@
     <script>
     let selectedPaymentDiv = null;
     let paypalConfig = null;
-    // fetch('/api/config')
-    //   .then(res => res.json())
-    //   .then(config => {
-    //     paypalConfig = config;
-    //     window.paypalApiUrl = config.testing ? 'http://localhost:3000' : 'https://joshuamorvant.com';
-    //     const script = document.createElement('script');
-    //     script.src = `https://www.paypal.com/sdk/js?client-id=${config.paypalClientId}&currency=USD`;
-    //     script.onload = function() {
-    //       window.dispatchEvent(new Event('paypal-sdk-ready'));
-    //     };
-    //     document.head.appendChild(script);
-    //   });
-
-    // Manually set .env variables for testing
-    paypalConfig = {
-      testing: false,
-      paypalClientId: 'AY9oYRC-YpMBFa8nJBSXcNNicaOt40-aSKJz_sJNO-_2_0eLbt9aya8_6POSsL11EX5a95LDC6TkBZLB',
-      paypalApi: 'https://api-m.paypal.com',
-      paypalTestAccount: {
-        email: 'sb-yok3r46103766@personal.example.com',
-        pass: '1U^xj!Mk',
-        name: 'John Doe',
-        card: '4032036087824189',
-        exp: '09/2030',
-        cvc: '000'
-      }
-    };
-    window.paypalApiUrl = 'https://joshuamorvant.com';
-    const script = document.createElement('script');
-    script.src = `https://www.paypal.com/sdk/js?client-id=${paypalConfig.paypalClientId}&currency=USD`;
-    script.onload = function() {
-      window.dispatchEvent(new Event('paypal-sdk-ready'));
-    };
-    document.head.appendChild(script);
+    
+    // Load PayPal configuration from backend
+    fetch('/api/config')
+      .then(res => res.json())
+      .then(config => {
+        paypalConfig = config;
+        window.paypalApiUrl = config.testing ? 'http://localhost:3000' : 'https://joshuamorvant.com';
+        const script = document.createElement('script');
+        script.src = `https://www.paypal.com/sdk/js?client-id=${config.paypalClientId}&currency=USD`;
+        script.onload = function() {
+          window.dispatchEvent(new Event('paypal-sdk-ready'));
+        };
+        document.head.appendChild(script);
+      })
+      .catch(error => {
+        console.error('Failed to load PayPal configuration:', error);
+        // Show user-friendly error message
+        const errorDiv = document.createElement('div');
+        errorDiv.style = 'background:#ffe6e6;border:2px solid #ba0000;padding:24px 12px;margin:18px 0;font-size:1.2em;color:#ba0000;text-align:center;border-radius:12px;';
+        errorDiv.textContent = 'Payment system is currently unavailable. Please try again later or contact support.';
+        document.querySelector('.container').appendChild(errorDiv);
+      });
 
     window.addEventListener('payment-div-selected', e => {
       document.querySelectorAll('payment-div').forEach(div => {
