@@ -19,15 +19,40 @@
         <small>JMLearning - Established 2025.</small>
     </footer>
     <script>
+    // Suppress browser permissions policy warnings for cleaner console
+    const originalConsoleWarn = console.warn;
+    console.warn = function(...args) {
+      const message = args.join(' ');
+      if (message.includes('Permissions policy violation') || 
+          message.includes('unload is not allowed') ||
+          message.includes('geolocation is not allowed')) {
+        return; // Suppress these specific warnings
+      }
+      originalConsoleWarn.apply(console, args);
+    };
+    
     let selectedPaymentDiv = null;
     let paypalConfig = null;
     
     // Load PayPal configuration from backend
-    fetch('/api/config')
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('10.0.0.');
+    const apiBaseUrl = isLocal ? 'http://localhost:3000' : 'https://joshuamorvant.com';
+    
+    // Only show debug logs in development
+    if (isLocal) {
+      console.log('🔧 Development mode detected');
+      console.log('Detected hostname:', window.location.hostname);
+      console.log('Using API URL:', apiBaseUrl);
+    }
+    
+    fetch(`${apiBaseUrl}/api/config`)
       .then(res => res.json())
       .then(config => {
+        if (isLocal) {
+          console.log('✅ PayPal config loaded:', config);
+        }
         paypalConfig = config;
-        window.paypalApiUrl = config.testing ? 'http://localhost:3000' : 'https://joshuamorvant.com';
+        window.paypalApiUrl = apiBaseUrl;
         const script = document.createElement('script');
         script.src = `https://www.paypal.com/sdk/js?client-id=${config.paypalClientId}&currency=USD`;
         script.onload = function() {
@@ -36,11 +61,16 @@
         document.head.appendChild(script);
       })
       .catch(error => {
-        console.error('Failed to load PayPal configuration:', error);
+        console.error('❌ Failed to load PayPal configuration:', error);
+        if (isLocal) {
+          console.error('API URL attempted:', apiBaseUrl + '/api/config');
+          console.error('Current hostname:', window.location.hostname);
+        }
+        
         // Show user-friendly error message
         const errorDiv = document.createElement('div');
         errorDiv.style = 'background:#ffe6e6;border:2px solid #ba0000;padding:24px 12px;margin:18px 0;font-size:1.2em;color:#ba0000;text-align:center;border-radius:12px;';
-        errorDiv.textContent = 'Payment system is currently unavailable. Please try again later or contact support.';
+        errorDiv.innerHTML = `Payment system is currently unavailable.<br><small>Debug: Tried ${apiBaseUrl}/api/config</small><br>Please try again later or contact support.`;
         document.querySelector('.container').appendChild(errorDiv);
       });
 
@@ -50,7 +80,9 @@
       });
       e.detail.element.setSelected(true);
       selectedPaymentDiv = e.detail;
-      console.log('Selected amount:', selectedPaymentDiv.amount); // Log amount to console
+      if (isLocal) {
+        console.log('💰 Selected service:', selectedPaymentDiv.description, '- $' + selectedPaymentDiv.amount);
+      }
       renderBottomPayPalButton();
     });
     window.addEventListener('payment-div-unselected', e => {
