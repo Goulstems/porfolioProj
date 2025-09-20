@@ -18,7 +18,7 @@ A portfolio project featuring a 3D mountain scene built with Three.js, creative 
 Open `src/index.html` for the main portfolio and 3D scene.
 
 ### Tutoring Service Demo
-Open `GeneralTutoring/index.html` to view the embedded tutoring service demo.
+Open `JMLearning/index.html` to view the embedded tutoring service demo.
 
 ### Backend (Node.js/Express)
 1. Install dependencies:
@@ -43,7 +43,7 @@ portfolioProj/
 │   ├── app.js              # Main portfolio logic (Three.js)
 │   ├── index.html          # Portfolio entry point
 │   └── jsModules/          # Three.js modules/utilities
-├── GeneralTutoring/
+├── JMLearning/
 │   ├── index.html          # Tutoring service demo
 │   ├── stats.js            # Stats cards logic
 │   ├── payment-div.js      # PayPal integration
