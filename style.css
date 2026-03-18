@@ -1,0 +1,101 @@
+body, html {
+  width: 100vw;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  /* overflow-x: hidden; */
+}
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 60px;
+  background: #000;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.topbar-content {
+  width: 100%;
+  padding: 0 2em;
+  color: #fff;
+  font-size: 1.2em;
+}
+.hero {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  margin-top: 60px;
+}
+.bg-local-wrapper {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+}
+.bg-local-wrapper video {
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  position: relative;
+  z-index: 0;
+  pointer-events: none;
+  background: #000;
+}
+.hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  color: #fff;
+  font-size: 1.5em;
+  pointer-events: auto;
+}
+.hero-text {
+  margin-top: 40px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2em;
+}
+.scroll-hint {
+  margin-top: 2em;
+  font-size: 1.1em;
+  color: #111;
+  opacity: 0.8;
+  position: relative;
+  left:-2em;
+  top:25em;
+  animation: bounce 1.5s infinite;
+  align-self: center;
+}
+@keyframes bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(10px); }
+}
+.about-me, .work-experience {
+  width: 100vw;
+  min-height: 60vh;
+  background: #222;
+  color: #fff;
+  padding-top: 60px;
+  z-index: 2;
+  position: relative;
+}
+.content-inner {
+  padding: 2em;
+  color: white;
+  max-width: 900px;
+  margin: 0 auto;
+}
