@@ -98,7 +98,18 @@ body, html {
   height: 100vh;
   overflow: hidden;
   z-index: 0;
+  pointer-events: auto;
+.video-blur-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   pointer-events: none;
+  z-index: 2;
+  backdrop-filter: blur(0px);
+  transition: backdrop-filter 0.3s;
+}
   transition: transform 0.2s cubic-bezier(0.4, 0.2, 0.2, 1);
 }
 .bg-local-wrapper video {

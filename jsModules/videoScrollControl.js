@@ -1,12 +1,12 @@
-window.addEventListener('DOMContentLoaded', () => {
-  const video = document.querySelector('.bg-local-wrapper video');
-  const hero = document.querySelector('.hero');
 
-  function updateVideoPlayback() {
+window.addEventListener('DOMContentLoaded', () => {
+  const video = document.getElementById('hero-video');
+  const hero = document.querySelector('.hero');
+  const blurOverlay = document.getElementById('video-blur-overlay');
+
+  function updateVideoPlaybackAndBlur() {
     const rect = hero.getBoundingClientRect();
     const windowHeight = window.innerHeight;
-
-    // New threshold: when bottom of hero is at halfway point of viewport
     const halfway = windowHeight / 2;
     let visibleRatio = 1;
 
@@ -15,11 +15,14 @@ window.addEventListener('DOMContentLoaded', () => {
     } else if (rect.top >= 0) {
       visibleRatio = 1;
     } else {
-      // Interpolate between 1 and 0 as bottom goes from windowHeight to halfway
       visibleRatio = Math.max(0, Math.min(1, (rect.bottom - halfway) / (windowHeight - halfway)));
     }
 
     video.playbackRate = visibleRatio;
+
+    // Blur effect: 0px when fully visible, up to 16px when scrolled down
+    const blurAmount = 16 * (1 - visibleRatio);
+    blurOverlay.style.backdropFilter = `blur(${blurAmount}px)`;
 
     if (visibleRatio === 0 && !video.paused) {
       video.pause();
@@ -28,7 +31,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  window.addEventListener('scroll', updateVideoPlayback);
-  window.addEventListener('resize', updateVideoPlayback);
-  updateVideoPlayback();
+  window.addEventListener('scroll', updateVideoPlaybackAndBlur);
+  window.addEventListener('resize', updateVideoPlaybackAndBlur);
+  updateVideoPlaybackAndBlur();
 });
