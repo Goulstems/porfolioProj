@@ -5,10 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Joshua Morvant Portfolio</title>
   <link rel="stylesheet" href="style.css">
-  <script type="module" src="./src/jsModules/THREE.js"></script>
-  <script type="module" src="./src/jsModules/GLTFLoader.js"></script>
-  <script type="module" src="./src/jsModules/loader.js"></script>
-  <script type="module" src="./src/app_game.js"></script>
 </head>
 <body>
 <div class="topbar">
@@ -22,31 +18,26 @@
   </div>
   <div class="hero-overlay">
     <div class="hero-text">
-      <div style="font-size:2.5em;font-weight:bold;line-height:1.1;">Joshua Morvant</div>
-      <div style="font-size:1.2em;margin-top:0.2em;">Snowboarding / Software</div>
+  <div class="hero-title">Joshua Morvant</div>
+  <div class="hero-subtitle">Snowboarding / Software</div>
     </div>
-    <span class="scroll-hint">↓ Scroll Down</span>
   </div>
 </section>
 <section class="about-me">
   <div class="content-inner">
-    <h2>About Me</h2>
+    <div class="arrow-container">
+      <span class="arrow">&#8595;</span>
+      <h2>About Me</h2>
+      <span class="arrow">&#8595;</span>
+    </div>
+  </div>
+  <div>
     <p>I'm Joshua Morvant, a passionate snowboarder and software developer. I love combining creativity and technology to build engaging experiences, both on the slopes and in code.</p>
     <p>Outside of work, you'll find me exploring mountains, learning new tech, and collaborating on innovative projects.</p>
   </div>
 </section>
-<section class="work-experience">
-  <div class="content-inner">
-    <h2>Work / Experience</h2>
-    <ul>
-      <li>Software Engineer at MountainTech (2022–present)</li>
-      <li>Freelance Web Developer (2019–2022)</li>
-      <li>Snowboarding Instructor at Crystal Mountain (2018–2021)</li>
-      <li>Personal Projects: Portfolio site, 3D mountain scene, video editing</li>
-    </ul>
-  </div>
-</section>
   <!-- All styles moved to style.css -->
 <script src="./jsModules/videoScrollControl.js"></script>
+<script src="./jsModules/parallaxSections.js"></script>
 </body>
 </html>

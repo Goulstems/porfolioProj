@@ -1,3 +1,52 @@
+.about-me {
+    border-top-left-radius: 2em;
+    border-top-right-radius: 2em;
+    overflow: hidden;
+    position: absolute;
+    left: 0;
+    top: 85vh;
+    border: 2px solid #333;
+    background: rgba(255,255,255,0.85);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    padding: 0em 1.5em;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .about-me .arrow {
+  display: inline-block;
+  font-size: 2em;
+  color: #222;
+  margin: 0;
+  vertical-align: middle;
+  animation: bounce 1.5s infinite;
+  }
+  .about-me .arrow-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin: 0;
+  }
+
+  .about-me-text {
+  flex: 1;
+  text-align: center;
+  font-size: 2em;
+  font-weight: bold;
+  color: #111;
+  position:absolute;
+    top:-1em
+  }
+  
+
+.about-me .content-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 body, html {
   width: 100vw;
   min-height: 100vh;
@@ -37,6 +86,7 @@ body, html {
   overflow: hidden;
   z-index: 0;
   pointer-events: none;
+  transition: transform 0.2s cubic-bezier(0.4, 0.2, 0.2, 1);
 }
 .bg-local-wrapper video {
   width: 100vw;
@@ -61,6 +111,7 @@ body, html {
   color: #fff;
   font-size: 1.5em;
   pointer-events: auto;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.7);
 }
 .hero-text {
   margin-top: 40px;
@@ -68,34 +119,13 @@ body, html {
   display: flex;
   flex-direction: column;
   gap: 0.2em;
-}
-.scroll-hint {
-  margin-top: 2em;
-  font-size: 1.1em;
-  color: #111;
-  opacity: 0.8;
-  position: relative;
-  left:-2em;
-  top:25em;
-  animation: bounce 1.5s infinite;
-  align-self: center;
+  padding-left: 1em;
+  padding-right: 1em; /* Add horizontal padding */
+  max-width: 600px;   /* Optionally limit width for better appearance */
+  margin-left: auto;
+  margin-right: auto;
 }
 @keyframes bounce {
   0%, 100% { transform: translateX(-50%) translateY(0); }
   50% { transform: translateX(-50%) translateY(10px); }
-}
-.about-me, .work-experience {
-  width: 100vw;
-  min-height: 60vh;
-  background: #222;
-  color: #fff;
-  padding-top: 60px;
-  z-index: 2;
-  position: relative;
-}
-.content-inner {
-  padding: 2em;
-  color: white;
-  max-width: 900px;
-  margin: 0 auto;
 }
