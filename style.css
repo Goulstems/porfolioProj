@@ -1,12 +1,25 @@
+.about-me-extended {
+  background: #fff;
+  width: 100vw;
+  min-height: 40vh;
+  padding: 2em 1.5em;
+  box-sizing: border-box;
+}
+.about-me-extended-inner {
+  max-width: 800px;
+  margin: 0 auto;
+  padding-top:1em;
+  color: #222;
+}
 .about-me {
     border-top-left-radius: 2em;
     border-top-right-radius: 2em;
     overflow: hidden;
     position: absolute;
     left: 0;
-    bottom: -3.5em;
+    bottom: -7em;
     border: 2px solid #333;
-    background: rgba(255,255,255,0.3);
+  background: rgba(255,255,255,1);
     box-shadow: 0 4px 16px rgba(0,0,0,0.15);
     padding: 0em 1.5em;
     width: fit-content;
@@ -37,7 +50,7 @@
   font-weight: bold;
   color: #111;
   position:absolute;
-    top:-1em
+    top:-3em
   }
   
 
@@ -55,9 +68,7 @@ body, html {
   /* overflow-x: hidden; */
 }
 .topbar {
-  position: fixed;
-  top: 0;
-  left: 0;
+  position: static;
   width: 100vw;
   height: 40px;
   background: #000;
@@ -72,14 +83,15 @@ body, html {
   color: #fff;
   font-size: 1.2em;
 }
-.hero {
-  position: relative;
+
+.video-bottom-bar {
   width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-  margin-top: 40px;
-  min-height: 100vh;
+  height: 6px;
+  background: #000;
+  margin: 0;
+  border: none;
 }
+  
 .bg-local-wrapper {
   position: relative;
   width: 100vw;
