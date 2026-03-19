@@ -1,10 +1,12 @@
 
+
 window.addEventListener('DOMContentLoaded', () => {
   const video = document.getElementById('hero-video');
   const hero = document.querySelector('.hero');
   const blurOverlay = document.getElementById('video-blur-overlay');
+  const arrows = document.querySelectorAll('.arrow');
 
-  function updateVideoPlaybackAndBlur() {
+  function updateVideoPlaybackAndBlurAndArrows() {
     const rect = hero.getBoundingClientRect();
     const windowHeight = window.innerHeight;
     const halfway = windowHeight / 2;
@@ -24,6 +26,17 @@ window.addEventListener('DOMContentLoaded', () => {
     const blurAmount = 16 * (1 - visibleRatio);
     blurOverlay.style.backdropFilter = `blur(${blurAmount}px)`;
 
+    // Arrow to dot transition
+    arrows.forEach(arrow => {
+      if (visibleRatio < 0.2) {
+        arrow.classList.add('arrow-dot');
+        arrow.textContent = '•';
+      } else {
+        arrow.classList.remove('arrow-dot');
+        arrow.textContent = '↓';
+      }
+    });
+
     if (visibleRatio === 0 && !video.paused) {
       video.pause();
     } else if (visibleRatio > 0 && video.paused) {
@@ -31,7 +44,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  window.addEventListener('scroll', updateVideoPlaybackAndBlur);
-  window.addEventListener('resize', updateVideoPlaybackAndBlur);
-  updateVideoPlaybackAndBlur();
+  window.addEventListener('scroll', updateVideoPlaybackAndBlurAndArrows);
+  window.addEventListener('resize', updateVideoPlaybackAndBlurAndArrows);
+  updateVideoPlaybackAndBlurAndArrows();
 });

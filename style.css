@@ -1,31 +1,42 @@
+.arrow-dot {
+  font-size: 2em;
+  color: #222;
+  display: inline-block;
+  animation: none;
+}
 .about-me-extended {
-  background: #fff;
+  background: rgb(255, 255, 255);
   width: 100vw;
   min-height: 40vh;
   padding: 2em 1.5em;
   box-sizing: border-box;
 }
 .about-me-extended-inner {
-  max-width: 800px;
-  margin: 0 auto;
+  max-width: 100vw;
+  margin: 0 0;
   padding-top:1em;
   color: #222;
 }
 .about-me {
-    border-top-left-radius: 2em;
-    border-top-right-radius: 2em;
-    overflow: hidden;
-    position: absolute;
-    left: 0;
-    bottom: -7em;
-    border: 2px solid #333;
-  background: rgba(255,255,255,1);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-    padding: 0em 1.5em;
-    width: fit-content;
-    margin-left: auto;
-    margin-right: auto;
-  }
+  border-top-left-radius: 2em;
+  border-top-right-radius: 2em;
+  overflow: hidden;
+  border: 2px solid #333;
+  background: rgba(255,255,255,0.3);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  padding: 0em 0em;
+  width: 100vw;
+  height: 15vh;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  top: -15.5vh;
+  bottom: 0;
+  left: 0;
+}
 
   .about-me .arrow {
   display: inline-block;
@@ -34,13 +45,16 @@
   margin: 0;
   vertical-align: middle;
   animation: bounce 1.5s infinite;
+  padding-left:1em;
   }
   .about-me .arrow-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%;
-  margin: 0;
+  width: 100vw;
+  margin: 0 auto;
+  position: relative;
+  top:-2vh;
   }
 
   .about-me-text {
@@ -49,8 +63,8 @@
   font-size: 2em;
   font-weight: bold;
   color: #111;
-  position:absolute;
-    top:-3em
+  margin: 0;
+  position: relative;
   }
   
 
@@ -65,7 +79,7 @@ body, html {
   min-height: 100vh;
   margin: 0;
   padding: 0;
-  /* overflow-x: hidden; */
+  overflow-x: hidden;
 }
 .topbar {
   position: static;
@@ -94,7 +108,7 @@ body, html {
   
 .bg-local-wrapper {
   position: relative;
-  width: 100vw;
+  width: 100%;
   height: 100vh;
   overflow: hidden;
   z-index: 0;
