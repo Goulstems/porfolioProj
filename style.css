@@ -6,16 +6,20 @@
 }
 .about-me-extended {
   background: rgb(255, 255, 255);
-  width: 100vw;
-  min-height: 40vh;
+  width: 90vw;
+  /* min-height: 10vh; */
   padding: 2em 1.5em;
-  box-sizing: border-box;
+  position:relative;
+  top:-14.5vh;
+  /* box-sizing: border-box; */
 }
 .about-me-extended-inner {
-  max-width: 100vw;
+  max-width: 90vw;
   margin: 0 0;
-  padding-top:1em;
+  /* padding-top:1em; */
   color: #222;
+  position: absolute;
+  top:0;
 }
 .about-me {
   border-top-left-radius: 2em;
@@ -26,14 +30,14 @@
   box-shadow: 0 4px 16px rgba(0,0,0,0.15);
   padding: 0em 0em;
   width: 100vw;
-  height: 15vh;
+  /* height: 15vh; */
   margin-left: auto;
   margin-right: auto;
   display: flex;
   justify-content: center;
   align-items: center;
   position: relative;
-  top: -15.5vh;
+  top: -14vh;
   bottom: 0;
   left: 0;
 }
@@ -65,13 +69,14 @@
   color: #111;
   margin: 0;
   position: relative;
+  /* top:-20vh; */
   }
   
 
 .about-me .content-inner {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  /* align-items: center; */
 }
 
 body, html {
@@ -90,6 +95,7 @@ body, html {
   display: flex;
   align-items: center;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  /* border-bottom: 3px solid #0074D9; */
 }
 .topbar-content {
   width: 100%;
@@ -142,7 +148,7 @@ body, html {
   left: 0;
   z-index: 1;
   width: 100vw;
-  height: 100vh;
+  /* height: 100vh; */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -153,7 +159,7 @@ body, html {
   text-shadow: 0 2px 8px rgba(0,0,0,0.7);
 }
 .hero-text {
-  margin-top: 40px;
+  margin-top: 60px;
   text-align: center;
   display: flex;
   flex-direction: column;
