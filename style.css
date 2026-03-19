@@ -1,3 +1,22 @@
+/* Navigation arrows below dots */
+.nav-arrow {
+  font-size: 2em;
+  color: #325bff;
+  font-weight: bold;
+  padding: 0 1em;
+  user-select: none;
+  pointer-events: auto;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.4s cubic-bezier(0.4, 0.2, 0.2, 1);
+  /* -webkit-text-stroke: 2px #000; */
+}
+.nav-arrow-left {
+  text-align: left;
+}
+.nav-arrow-right {
+  text-align: right;
+}
 .arrow-dot {
   font-size: 2em;
   color: #222;
@@ -65,7 +84,7 @@
   width: 100vw;
   margin: 0 auto;
   position: relative;
-  top: -1.5vh;
+  top: -1vh;
   left:-1.5vh;
   height: 100%;
   }
