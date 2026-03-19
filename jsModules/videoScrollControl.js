@@ -5,42 +5,56 @@ window.addEventListener('DOMContentLoaded', () => {
   const hero = document.querySelector('.hero');
   const blurOverlay = document.getElementById('video-blur-overlay');
   const arrows = document.querySelectorAll('.arrow');
+  const arrowDots = document.querySelectorAll('.arrow-dot');
 
   function updateVideoPlaybackAndBlurAndArrows() {
-    const rect = hero.getBoundingClientRect();
-    const windowHeight = window.innerHeight;
-    const halfway = windowHeight / 2;
-    let visibleRatio = 1;
+    // Calculate scroll ratio
+    const scrollY = window.scrollY;
+    const scrollHeight = document.body.scrollHeight - window.innerHeight;
+    const scrollRatio = scrollHeight > 0 ? scrollY / scrollHeight : 0;
 
-    if (rect.bottom <= halfway) {
-      visibleRatio = 0;
-    } else if (rect.top >= 0) {
-      visibleRatio = 1;
-    } else {
-      visibleRatio = Math.max(0, Math.min(1, (rect.bottom - halfway) / (windowHeight - halfway)));
-    }
+    // Reverse scroll ratio for logic
+    const reverseRatio = 1 - scrollRatio;
 
-    video.playbackRate = visibleRatio;
+  // Video playback rate: minimum 0.2, maximum 1.0 (plays at top, stops at bottom)
+  let playbackRate = 0.2 + reverseRatio * 0.8;
+  playbackRate = Math.min(playbackRate, 1.0);
+  if (video) video.playbackRate = playbackRate;
 
-    // Blur effect: 0px when fully visible, up to 16px when scrolled down
-    const blurAmount = 16 * (1 - visibleRatio);
-    blurOverlay.style.backdropFilter = `blur(${blurAmount}px)`;
+    // Blur effect: 0px when at top, up to 16px when scrolled down
+    const blurAmount = 16 * scrollRatio;
+    if (blurOverlay) blurOverlay.style.backdropFilter = `blur(${blurAmount}px)`;
 
-    // Arrow to dot transition
+    // Arrow to dot transition (arrows at top, circles at bottom)
     arrows.forEach(arrow => {
-      if (visibleRatio < 0.2) {
+      if (scrollRatio > 0.8) {
         arrow.classList.add('arrow-dot');
         arrow.textContent = '•';
+        // Stop bounce animation if at bottom
+        if (scrollRatio >= 1) {
+          // arrow.style.animation = 'none';
+          // arrow.style.transform = '';
+        } else {
+          // Animation speed: duration from 0.5s (fast) to 2.5s (slow)
+          const duration = 0.5 + (2.5 - 0.5) * reverseRatio;
+          arrow.style.animation = `bounce ${duration}s infinite`;
+        }
       } else {
         arrow.classList.remove('arrow-dot');
         arrow.textContent = '↓';
+        // Animation speed: duration from 0.5s (fast) to 2.5s (slow)
+        const duration = 0.5 + (2.5 - 0.5) * reverseRatio;
+        arrow.style.animation = `bounce ${duration}s infinite`;
       }
     });
 
-    if (visibleRatio === 0 && !video.paused) {
-      video.pause();
-    } else if (visibleRatio > 0 && video.paused) {
-      video.play();
+    // Pause/play video based on scroll (playing at top, stopped at bottom)
+    if (video) {
+      if (scrollRatio >= 1 && !video.paused) {
+        video.pause();
+      } else if (scrollRatio < 1 && video.paused) {
+        video.play();
+      }
     }
   }
 

@@ -3,6 +3,8 @@
   color: #222;
   display: inline-block;
   animation: none;
+  vertical-align: middle;
+  transform: translateY(0) !important;
 }
 .about-me-extended {
   background: rgb(255, 255, 255);
@@ -63,7 +65,9 @@
   width: 100vw;
   margin: 0 auto;
   position: relative;
-  top:-1.5vh;
+  top: -1.5vh;
+  left:-1.5vh;
+  height: 100%;
   }
 
   .about-me-text {
@@ -106,12 +110,16 @@ body, html {
   width: 100%;
   padding: 0 2em;
   color: #fff;
-  font-size: 1.2em;
-}
-
-.video-bottom-bar {
-  width: 100vw;
-  height: 6px;
+  font-size: 2em;
+  color: #222;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: none;
+  height: 100%;
+  width: 2em;
+  vertical-align: middle;
+  transform: none !important;
   background: #000;
   margin: 0;
   border: none;
@@ -176,6 +184,6 @@ body, html {
   margin-right: auto;
 }
 @keyframes bounce {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50% { transform: translateX(-50%) translateY(10px); }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(10px); }
 }
