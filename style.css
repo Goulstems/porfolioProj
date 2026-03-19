@@ -10,7 +10,7 @@
   /* min-height: 10vh; */
   padding: 2em 1.5em;
   position:relative;
-  top:-14.5vh;
+  top:-16vh;
   /* box-sizing: border-box; */
 }
 .about-me-extended-inner {
@@ -18,8 +18,13 @@
   margin: 0 0;
   /* padding-top:1em; */
   color: #222;
-  position: absolute;
+  position: relative;
   top:0;
+}
+
+#aboutMeTitle {
+    padding-top:.5em;
+    font-size:1.25em;
 }
 .about-me {
   border-top-left-radius: 2em;
@@ -37,7 +42,7 @@
   justify-content: center;
   align-items: center;
   position: relative;
-  top: -14vh;
+  top: -16vh;
   bottom: 0;
   left: -1vw;
 }
@@ -58,13 +63,13 @@
   width: 100vw;
   margin: 0 auto;
   position: relative;
-  top:-2vh;
+  top:-1.5vh;
   }
 
   .about-me-text {
   flex: 1;
   text-align: center;
-  font-size: 2em;
+  font-size: 1em;
   font-weight: bold;
   color: #111;
   margin: 0;
