@@ -13,6 +13,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const contentTitle = document.getElementById('contentTitle');
   const contentArea = document.getElementById('contentArea');
   const contentPanels = contentArea ? Array.from(contentArea.querySelectorAll('.content-panel')) : [];
+  const carouselDots = Array.from(document.querySelectorAll('.carousel-dot'));
   const navArrowLeft = document.querySelector('.nav-arrow-left');
   const navArrowRight = document.querySelector('.nav-arrow-right');
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -40,6 +41,13 @@ window.addEventListener('DOMContentLoaded', () => {
     if (title) {
       contentTitle.textContent = title;
     }
+  }
+
+  function updateCarouselDots(index) {
+    if (carouselDots.length === 0) return;
+    carouselDots.forEach((dot, dotIndex) => {
+      dot.classList.toggle('is-active', dotIndex === index);
+    });
   }
 
   function animateTitleToIndex(nextIndex, direction) {
@@ -95,6 +103,7 @@ window.addEventListener('DOMContentLoaded', () => {
     contentArea.scrollTo({ left: nextIndex * panelWidth, behavior: 'auto' });
     activePanelIndex = nextIndex;
     updateContentTitle(activePanelIndex);
+    updateCarouselDots(activePanelIndex);
   }
 
   function animateToPanel(index) {
@@ -143,11 +152,12 @@ window.addEventListener('DOMContentLoaded', () => {
 
     animationFrameId = window.requestAnimationFrame(step);
     activePanelIndex = nextIndex;
+    updateCarouselDots(activePanelIndex);
   }
 
   function stepPanel(direction) {
     const nextIndex = clampPanelIndex(activePanelIndex + direction);
-    clearArrowStates(navArrowLeft, navArrowRight);
+    // Don't clear arrow states here - let the click animation complete first
     animateToPanel(nextIndex);
   }
 
@@ -160,6 +170,7 @@ window.addEventListener('DOMContentLoaded', () => {
       const direction = nextIndex > activePanelIndex ? 1 : -1;
       animateTitleToIndex(nextIndex, direction);
       activePanelIndex = nextIndex;
+      updateCarouselDots(activePanelIndex);
     }
   }
 
@@ -249,18 +260,19 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     arrow.addEventListener('animationend', onAnimEnd, { once: true });
 
-    // Fallback in case animationend doesn't fire
+    // Fallback in case animationend doesn't fire (matches 600ms animation)
     const timerId = window.setTimeout(() => {
       arrow.removeEventListener('animationend', onAnimEnd);
       arrow.classList.remove('is-clicked');
       clickFeedbackTimers.delete(arrow);
-    }, 400);
+    }, 800);
     clickFeedbackTimers.set(arrow, timerId);
   }
 
-  function setupArrowInteractionFeedback(arrow) {
+  function setupArrowInteractionFeedback(arrow, direction) {
     if (!arrow) return;
     let pointerLeftAfterDown = false;
+    let touchStarted = false;
 
     arrow.addEventListener('pointerenter', (event) => {
       pointerLeftAfterDown = false;
@@ -290,6 +302,14 @@ window.addEventListener('DOMContentLoaded', () => {
       // Only pulse if the pointer never left (i.e. clean tap, not a drag-release)
       if (!pointerLeftAfterDown) {
         flashArrowClick(arrow);
+        // Trigger navigation on clean tap
+        console.log('pointerup - loweredState:', loweredState, 'direction:', direction, 'contentArea exists:', !!contentArea);
+        if (contentArea && loweredState) {
+          console.log('Calling stepPanel with direction:', direction);
+          stepPanel(direction);
+        } else {
+          console.log('Not calling stepPanel - loweredState:', loweredState, 'contentArea:', !!contentArea);
+        }
       }
     });
 
@@ -297,26 +317,32 @@ window.addEventListener('DOMContentLoaded', () => {
       pointerLeftAfterDown = true;
       arrow.classList.remove('is-pressed', 'is-hovered');
     });
-  }
 
-  setupArrowInteractionFeedback(navArrowLeft);
-  setupArrowInteractionFeedback(navArrowRight);
+    // Backup touch handlers for mobile compatibility
+    arrow.addEventListener('touchstart', (event) => {
+      touchStarted = true;
+      arrow.classList.add('is-pressed');
+    });
 
-  if (navArrowLeft) {
-    navArrowLeft.addEventListener('click', () => {
-      if (!loweredState) return;
-      stepPanel(-1);
+    arrow.addEventListener('touchend', (event) => {
+      arrow.classList.remove('is-pressed', 'is-hovered');
+      if (touchStarted) {
+        flashArrowClick(arrow);
+        console.log('touchend - loweredState:', loweredState, 'direction:', direction);
+        if (contentArea && loweredState) {
+          console.log('touchend: Calling stepPanel with direction:', direction);
+          stepPanel(direction);
+        }
+      }
+      touchStarted = false;
     });
   }
 
-  if (navArrowRight) {
-    navArrowRight.addEventListener('click', () => {
-      if (!loweredState) return;
-      stepPanel(1);
-    });
-  }
+  setupArrowInteractionFeedback(navArrowLeft, -1);
+  setupArrowInteractionFeedback(navArrowRight, 1);
 
   updateContentTitle(activePanelIndex);
+  updateCarouselDots(activePanelIndex);
 
 
   function updateVideoPlaybackAndBlurAndArrows() {
