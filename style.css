@@ -3,14 +3,67 @@
   font-size: 2em;
   color: #ffffff;
   font-weight: bold;
-  padding: 0 1em;
+  padding-left: 1em;
+  padding-right: 1em;
+  -webkit-user-select: none;
   user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
   pointer-events: auto;
   line-height: 1;
   opacity: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
   transition: opacity 0.4s cubic-bezier(0.4, 0.2, 0.2, 1);
   /* -webkit-text-stroke: 2px #000; */
 }
+
+/* Circle background lives on the pseudo so padding doesn't stretch it */
+.nav-arrow::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1.5em;
+  height: 1.5em;
+  border-radius: 50%;
+  background: transparent;
+  transform: translate(-50%, -50%) scale(1);
+  transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+  pointer-events: none;
+}
+
+.nav-arrow.is-hovered::before {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translate(-50%, -50%) scale(1.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+.nav-arrow:active::before,
+.nav-arrow.is-pressed::before {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translate(-50%, -50%) scale(0.9);
+  box-shadow: none;
+}
+
+.nav-arrow.is-clicked::before {
+  animation: navArrowClickPulse 220ms ease-out;
+}
+
+.nav-arrow:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.8);
+  outline-offset: 2px;
+}
+
+@keyframes navArrowClickPulse {
+  0%   { transform: translate(-50%, -50%) scale(0.9); }
+  60%  { transform: translate(-50%, -50%) scale(1.1); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+
 .nav-arrow-left {
   text-align: left;
 }
@@ -35,18 +88,39 @@
   /* box-sizing: border-box; */
 }
 .about-me-extended-inner {
-  max-width: 90vw;
+  max-width: 100vw;
   margin: 0 0;
-  /* padding-top:1em; */
+  padding-top: 1em;
   color: #222;
   position: relative;
   top:0;
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: none;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch;
 }
 
-#aboutMeTitle {
+#contentTitle {
     padding-top:.5em;
     font-size:1.25em;
     text-shadow: 0 2px 8px rgba(0,0,0,0.7);
+}
+
+.about-me-extended-inner::-webkit-scrollbar {
+  height: 0;
+}
+
+.content-panel {
+  flex: 0 0 100vw;
+  width: 100vw;
+  box-sizing: border-box;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  padding: 0 1.5em;
 }
 .about-me {
   border-top-left-radius: 2em;
@@ -114,6 +188,7 @@ body, html {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
+  overscroll-behavior-x: none;
 }
 .topbar {
   position: static;
@@ -211,3 +286,5 @@ body, html {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(10px); }
 }
+
+
