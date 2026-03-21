@@ -1,7 +1,7 @@
 /* Navigation arrows below dots */
 .nav-arrow {
   font-size: 2em;
-  color: #325bff;
+  color: #ffffff;
   font-weight: bold;
   padding: 0 1em;
   user-select: none;
@@ -66,7 +66,7 @@
   position: relative;
   top: -16vh;
   bottom: 0;
-  left: -1vw;
+  left: -0.25vw;
 }
 
   .about-me .arrow {
@@ -190,7 +190,7 @@ body, html {
   color: #fff;
   font-size: 1.5em;
   pointer-events: auto;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.7);
+  text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
 }
 .hero-text {
   margin-top: 60px;
@@ -205,7 +205,7 @@ body, html {
   margin-right: auto;
   /* Dramatic text shadow for visibility */
   color: #fff;
-  text-shadow: 8px 8px 32px #000, 0 0 8px #ff4081, 0 0 32px #00e5ff;
+  text-shadow: 2px 2px 8px #000
 }
 @keyframes bounce {
   0%, 100% { transform: translateY(0); }
