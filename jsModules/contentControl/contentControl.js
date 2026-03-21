@@ -108,12 +108,30 @@ window.addEventListener('DOMContentLoaded', () => {
     stepPanel(direction);
   }
 
+  function navigateToPanelFromTopbar(panelIndex) {
+    const targetIndex = clampPanelIndex(panelIndex, contentPanels.length);
+    const aboutMeSection = document.querySelector('.about-me');
+    if (aboutMeSection) {
+      const viewportOffset = 8;
+      const top = window.scrollY + aboutMeSection.getBoundingClientRect().top - viewportOffset;
+      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    }
+
+    animateToPanel(elements, state, animationOptions, targetIndex, finishPanelAnimation);
+  }
+
   contentArea.addEventListener('scroll', () => {
     syncPanelFromScroll(elements, state, animationOptions);
   }, { passive: true });
   contentArea.addEventListener('wheel', handleWheel, { passive: false });
   contentArea.addEventListener('touchstart', handleTouchStart, { passive: true });
   contentArea.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+  window.addEventListener('topbar:navigate-panel', (event) => {
+    const panelIndex = Number(event?.detail?.panelIndex);
+    if (Number.isNaN(panelIndex)) return;
+    navigateToPanelFromTopbar(panelIndex);
+  });
 
   window.addEventListener('resize', () => {
     scrollToPanel(elements, state, animationOptions, state.activePanelIndex, 'auto');

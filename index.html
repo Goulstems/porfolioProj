@@ -9,7 +9,15 @@
 <body>
 <div class="topbar">
   <div class="topbar-content">
-    <!-- Add logo or navigation here if needed -->
+    <button id="menuToggle" class="menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="topbarMenu">
+      <span class="menu-toggle-bars" aria-hidden="true"></span>
+      <span class="menu-toggle-close" aria-hidden="true">X</span>
+    </button>
+    <nav id="topbarMenu" class="topbar-menu" aria-label="Primary" aria-hidden="true">
+      <button type="button" class="topbar-menu-link" data-panel-index="0">About Me</button>
+      <button type="button" class="topbar-menu-link" data-panel-index="1">Work experience</button>
+      <button type="button" class="topbar-menu-link" data-panel-index="2">Contact</button>
+    </nav>
   </div>
 </div>
 
@@ -49,17 +57,17 @@
 </section>
 <section class="about-me-extended">
   <div id="contentArea" class="about-me-extended-inner">
-    <article class="content-panel" data-title="About Me">
+    <article id="about-me-panel" class="content-panel" data-title="About Me">
       <h3>More About Me</h3>
       <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nunc ut laoreet dictum, enim erat facilisis urna, nec dictum sapien enim nec velit. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Suspendisse potenti.</p>
       <p>Etiam euismod, justo ac facilisis cursus, enim erat facilisis urna, nec dictum sapien enim nec velit. Curabitur euismod, justo ac facilisis cursus, enim erat facilisis urna, nec dictum sapien enim nec velit.</p>
     </article>
-    <article class="content-panel" data-title="Work / Experience">
+    <article id="work-experience-panel" class="content-panel" data-title="Work / Experience">
       <h3>Work / Experience</h3>
       <p>Share key projects, technologies, and the impact of your work here. You can highlight outcomes, team collaboration, and the stack you enjoy building with.</p>
       <p>Add a few concise wins, like performance improvements, shipped features, or leadership moments that show your strengths.</p>
     </article>
-    <article class="content-panel" data-title="Contact">
+    <article id="contact-panel" class="content-panel" data-title="Contact">
       <h3>Contact</h3>
       <p>Drop your preferred contact methods here, such as email, GitHub, and LinkedIn.</p>
       <p>You can also include location, availability, and what kinds of opportunities you are open to.</p>
@@ -69,5 +77,6 @@
   <!-- All styles moved to style.css -->
 <script type="module" src="./jsModules/videoScrollControl/videoScrollControl.js"></script>
 <script type="module" src="./jsModules/contentControl/contentControl.js"></script>
+<script type="module" src="./jsModules/topbar/topbarMenuControl.js"></script>
 </body>
 </html>
