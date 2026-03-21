@@ -33,30 +33,25 @@ function handleNavArrowAnimation(scrollRatio) {
   const right = document.querySelector('.nav-arrow-right');
   if (!arrowNav) return;
 
-  if (scrollRatio > 0.8) {
-    // Always show nav arrows before fading in
+  // Calculate fade directly from scroll ratio between 0.8 and 1
+  let fade = 0;
+  if (scrollRatio >= 0.8 /*&& scrollRatio <= 1*/) {
+    fade = (scrollRatio - 0.8) / 0.2;
+    fade = Math.max(0, Math.min(1, fade));
+  }
+
+  setNavArrowFade(left, right, fade);
+
+  if (fade > 0) {
     showNavArrows(arrowNav);
-    setTimeout(() => {
-      const fade = Math.max(0, Math.min(1, (scrollRatio - 0.95) / 0.05));
-      setNavArrowFade(left, right, fade);
-      // Only hide after fade-out completes
-      if (fade === 0) {
-        setTimeout(() => {
-          hideNavArrows(arrowNav);
-        }, 400);
-      }
-    }, 10);
   } else {
-    // Fade out arrows, then hide nav container after transition
-    setNavArrowFade(left, right, '0');
-    setTimeout(() => {
-      hideNavArrows(arrowNav);
-    }, 400);
+    hideNavArrows(arrowNav);
   }
 }
 
 // Main exported function
 export function handleArrowScrollAnimation(arrows, scrollRatio, reverseRatio) {
+  console.log('scrollRatio:', scrollRatio);
   arrows.forEach(arrow => animateArrowDot(arrow, scrollRatio, reverseRatio));
   handleNavArrowAnimation(scrollRatio);
 }

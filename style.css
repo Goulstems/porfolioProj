@@ -46,6 +46,7 @@
 #aboutMeTitle {
     padding-top:.5em;
     font-size:1.25em;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.7);
 }
 .about-me {
   border-top-left-radius: 2em;
@@ -151,6 +152,8 @@ body, html {
   overflow: hidden;
   z-index: 0;
   pointer-events: auto;
+}
+
 .video-blur-overlay {
   position: absolute;
   top: 0;
@@ -162,8 +165,7 @@ body, html {
   backdrop-filter: blur(0px);
   transition: backdrop-filter 0.3s;
 }
-  transition: transform 0.2s cubic-bezier(0.4, 0.2, 0.2, 1);
-}
+
 .bg-local-wrapper video {
   width: 100vw;
   height: 100vh;
@@ -201,6 +203,9 @@ body, html {
   max-width: 600px;   /* Optionally limit width for better appearance */
   margin-left: auto;
   margin-right: auto;
+  /* Dramatic text shadow for visibility */
+  color: #fff;
+  text-shadow: 8px 8px 32px #000, 0 0 8px #ff4081, 0 0 32px #00e5ff;
 }
 @keyframes bounce {
   0%, 100% { transform: translateY(0); }
