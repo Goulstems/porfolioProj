@@ -10,6 +10,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const video = document.getElementById('hero-video');
   const blurOverlay = document.getElementById('video-blur-overlay');
   const arrows = document.querySelectorAll('.arrow');
+  const arrowNav = document.getElementById('arrow-nav');
   const contentTitle = document.getElementById('contentTitle');
   const contentArea = document.getElementById('contentArea');
   const contentPanels = contentArea ? Array.from(contentArea.querySelectorAll('.content-panel')) : [];
@@ -25,6 +26,7 @@ window.addEventListener('DOMContentLoaded', () => {
   let lastWheelStepTs = 0;
   let touchStartX = 0;
   let touchStartIndex = 0;
+  let lastArrowNavInteractionTs = 0;
   const clickFeedbackTimers = new WeakMap();
 
   function getPanelWidth() {
@@ -33,6 +35,16 @@ window.addEventListener('DOMContentLoaded', () => {
 
   function clampPanelIndex(index) {
     return Math.max(0, Math.min(index, contentPanels.length - 1));
+  }
+
+  function isArrowNavVisible() {
+    if (!arrowNav) return false;
+    const styles = window.getComputedStyle(arrowNav);
+    return styles.display !== 'none';
+  }
+
+  function canInteractWithCarousel() {
+    return !!contentArea && contentPanels.length > 0 && (loweredState || isArrowNavVisible());
   }
 
   function updateContentTitle(index) {
@@ -175,13 +187,13 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   function handleTouchStart(event) {
-    if (!loweredState || !contentArea || event.touches.length === 0) return;
+    if (!canInteractWithCarousel() || event.touches.length === 0) return;
     touchStartX = event.touches[0].clientX;
     touchStartIndex = activePanelIndex;
   }
 
   function handleTouchEnd(event) {
-    if (!loweredState || !contentArea || event.changedTouches.length === 0) return;
+    if (!canInteractWithCarousel() || event.changedTouches.length === 0) return;
     const deltaX = event.changedTouches[0].clientX - touchStartX;
 
     if (Math.abs(deltaX) < SWIPE_THRESHOLD_PX) {
@@ -191,11 +203,14 @@ window.addEventListener('DOMContentLoaded', () => {
 
     const direction = deltaX < 0 ? 1 : -1;
     const targetIndex = clampPanelIndex(touchStartIndex + direction);
+    if (targetIndex !== touchStartIndex) {
+      pulseNavArrowForDirection(direction);
+    }
     animateToPanel(targetIndex);
   }
 
   function handleWheel(event) {
-    if (!loweredState || !contentArea) return;
+    if (!canInteractWithCarousel()) return;
     const horizontalIntent = Math.abs(event.deltaX) > Math.abs(event.deltaY);
     const dominantDelta = horizontalIntent ? event.deltaX : event.deltaY;
     if (Math.abs(dominantDelta) < 8) return;
@@ -206,6 +221,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
     lastWheelStepTs = now;
     const direction = dominantDelta > 0 ? 1 : -1;
+    const targetIndex = clampPanelIndex(activePanelIndex + direction);
+    if (targetIndex !== activePanelIndex) {
+      pulseNavArrowForDirection(direction);
+    }
     stepPanel(direction);
   }
 
@@ -269,6 +288,22 @@ window.addEventListener('DOMContentLoaded', () => {
     clickFeedbackTimers.set(arrow, timerId);
   }
 
+  function pulseNavArrowForDirection(direction) {
+    const arrow = direction > 0 ? navArrowRight : navArrowLeft;
+    flashArrowClick(arrow);
+  }
+
+  function triggerArrowNavigation(arrow, direction) {
+    const now = performance.now();
+    if (now - lastArrowNavInteractionTs < 250) return;
+
+    flashArrowClick(arrow);
+    if (!canInteractWithCarousel()) return;
+
+    lastArrowNavInteractionTs = now;
+    stepPanel(direction);
+  }
+
   function setupArrowInteractionFeedback(arrow, direction) {
     if (!arrow) return;
     let pointerLeftAfterDown = false;
@@ -290,7 +325,9 @@ window.addEventListener('DOMContentLoaded', () => {
       pointerLeftAfterDown = false;
       arrow.classList.add('is-pressed');
       // Release implicit pointer capture so pointerleave fires normally on drag-away
-      arrow.releasePointerCapture(event.pointerId);
+      if (arrow.hasPointerCapture && arrow.hasPointerCapture(event.pointerId)) {
+        arrow.releasePointerCapture(event.pointerId);
+      }
     });
 
     arrow.addEventListener('pointerup', (event) => {
@@ -301,15 +338,7 @@ window.addEventListener('DOMContentLoaded', () => {
       }
       // Only pulse if the pointer never left (i.e. clean tap, not a drag-release)
       if (!pointerLeftAfterDown) {
-        flashArrowClick(arrow);
-        // Trigger navigation on clean tap
-        console.log('pointerup - loweredState:', loweredState, 'direction:', direction, 'contentArea exists:', !!contentArea);
-        if (contentArea && loweredState) {
-          console.log('Calling stepPanel with direction:', direction);
-          stepPanel(direction);
-        } else {
-          console.log('Not calling stepPanel - loweredState:', loweredState, 'contentArea:', !!contentArea);
-        }
+        triggerArrowNavigation(arrow, direction);
       }
     });
 
@@ -327,12 +356,7 @@ window.addEventListener('DOMContentLoaded', () => {
     arrow.addEventListener('touchend', (event) => {
       arrow.classList.remove('is-pressed', 'is-hovered');
       if (touchStarted) {
-        flashArrowClick(arrow);
-        console.log('touchend - loweredState:', loweredState, 'direction:', direction);
-        if (contentArea && loweredState) {
-          console.log('touchend: Calling stepPanel with direction:', direction);
-          stepPanel(direction);
-        }
+        triggerArrowNavigation(arrow, direction);
       }
       touchStarted = false;
     });
@@ -351,8 +375,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const scrollHeight = document.body.scrollHeight - window.innerHeight;
     const scrollRatio = scrollHeight > 0 ? scrollY / scrollHeight : 0;
     const reverseRatio = 1 - scrollRatio;
-    loweredState = scrollRatio >= 1;
-    console.log('scrollRatio:', scrollRatio, 'reverseRatio:', reverseRatio);
+    loweredState = scrollRatio >= 0.98;
 
     handleVideoScrollAnimation(video, blurOverlay, scrollRatio, reverseRatio);
     handleArrowScrollAnimation(arrows, scrollRatio, reverseRatio);
